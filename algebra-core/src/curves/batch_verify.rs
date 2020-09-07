@@ -114,7 +114,6 @@ pub fn batch_verify_in_subgroup<C: AffineCurve, R: Rng>(
         // We estimate the costs of a single scalar multiplication
         <C::ScalarField as PrimeField>::Params::MODULUS_BITS as usize,
     );
-    println!("num_buckets: {}, num_rounds: {}", num_buckets, num_rounds);
     run_rounds(points, num_buckets, num_rounds, None, rng)?;
     Ok(())
 }
