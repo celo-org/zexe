@@ -152,11 +152,7 @@ impl VariableBaseMSM {
 
                 let mut elems = bases.to_vec();
 
-                let buckets = if true {
-                    batch_bucketed_add::<G>(n_buckets, &mut elems[..], scalars.as_slice())
-                } else {
-                    batch_bucketed_add_split::<G>(n_buckets, bases, scalars.as_slice(), 9)
-                };
+                let buckets = batch_bucketed_add::<G>(n_buckets, &mut elems[..], scalars.as_slice());
 
                 let mut res = zero;
                 let mut running_sum = G::Projective::zero();

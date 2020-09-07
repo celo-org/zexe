@@ -214,12 +214,12 @@ pub fn batch_bucketed_add_split<C: AffineCurve>(
     buckets: usize,
     elems: &[C],
     bucket_assign: &[usize],
-    bucket_size: usize,
+    target_n_buckets_hint: usize,
 ) -> Vec<C> {
-    let split_size = if buckets >= 1 << 26 {
-        1 << 16
+    let split_size = if buckets > 1 << target_n_buckets_hint {
+        1 << target_n_buckets_hint
     } else {
-        1 << bucket_size
+        buckets
     };
     let num_split = (buckets - 1) / split_size + 1;
     let mut elem_split = vec![vec![]; num_split];
