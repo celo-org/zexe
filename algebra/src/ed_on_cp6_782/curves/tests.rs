@@ -12,6 +12,7 @@ use crate::tests::{curves::*, groups::*};
 fn test_projective_curve() {
     curve_tests::<EdwardsProjective>();
 
+    println!("EDwards tests");
     edwards_tests::<EdwardsParameters>();
 }
 
