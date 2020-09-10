@@ -22,6 +22,7 @@ use crate::{
     },
 };
 
+#[allow(unused)]
 pub(crate) const ITERATIONS: usize = 5;
 
 #[allow(unused)]

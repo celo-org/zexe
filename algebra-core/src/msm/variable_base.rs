@@ -157,15 +157,10 @@ impl VariableBaseMSM {
                     .collect();
                 timer_println!(_now, "scalars->buckets");
 
-<<<<<<< HEAD
-                let buckets =
-                    batch_bucketed_add::<G>(n_buckets, &mut elems[..], scalars.as_slice());
-=======
                 let _now = timer!();
                 let buckets =
                     batch_bucketed_add::<G>(n_buckets, &bases[..], &mut bucket_positions[..]);
                 timer_println!(_now, "bucket add");
->>>>>>> jonch/glv
 
                 let _now = timer!();
                 let mut res = zero;

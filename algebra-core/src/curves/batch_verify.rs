@@ -1,11 +1,7 @@
 use crate::fields::FpParameters;
 use crate::{
     cfg_chunks_mut,
-<<<<<<< HEAD
-    curves::{batch_bucketed_add, BatchGroupArithmeticSlice, BATCH_SIZE},
-=======
     curves::{batch_bucketed_add, BatchGroupArithmeticSlice, BucketPosition, BATCH_SIZE},
->>>>>>> jonch/glv
     AffineCurve, PrimeField, ProjectiveCurve, Vec,
 };
 use num_traits::identities::Zero;
@@ -39,21 +35,14 @@ fn verify_points<C: AffineCurve, R: Rng>(
             position: i as u32,
         });
     }
-<<<<<<< HEAD
-    let mut buckets = batch_bucketed_add(num_buckets, &mut points.to_vec(), &bucket_assign[..]);
-=======
     let _now = timer!();
     let mut buckets = batch_bucketed_add(num_buckets, &mut points.to_vec(), &mut bucket_assign[..]);
     timer_println!(_now, format!("bucketed add({}, {})", num_buckets, n_points));
->>>>>>> jonch/glv
 
     // We use the batch_scalar_mul to check the subgroup condition if
     // there are sufficient number of buckets. For SW curves, the number
     // elems for the batch mul to become useful is around 2^24.
-<<<<<<< HEAD
-=======
     let _now = timer!();
->>>>>>> jonch/glv
     let verification_failure = if num_buckets >= BATCH_SIZE {
         cfg_chunks_mut!(buckets, BATCH_SIZE).for_each(|e| {
             let length = e.len();
@@ -135,15 +124,10 @@ pub fn batch_verify_in_subgroup<C: AffineCurve, R: Rng>(
     let (num_buckets, num_rounds, _) = get_max_bucket(
         security_param,
         points.len(),
-<<<<<<< HEAD
-        // We estimate the costs of a single scalar multiplication
-        <C::ScalarField as PrimeField>::Params::MODULUS_BITS as usize,
-=======
         // We estimate the costs of a single scalar multiplication in the batch affine, w-NAF GLV case as
         // 7/6 * 0.5 * n_bits * 0.8 (doubling) + 0.5 * 1/(w + 1) * n_bits (addition)
         // We take into account that doubling in the batch add model is cheaper as it requires less cache use
         cost_estimate,
->>>>>>> jonch/glv
     );
     run_rounds(points, num_buckets, num_rounds, None, rng)?;
     Ok(())
@@ -164,13 +148,6 @@ fn get_max_bucket(
             (security_param as f64 / log2_num_buckets).ceil() as usize
         };
 
-<<<<<<< HEAD
-    while num_rounds(log2_num_buckets)
-        * next_check_per_elem_cost
-        * (2.pow(log2_num_buckets) as usize)
-        < n_elems
-        && num_rounds(log2_num_buckets + 1) > 1
-=======
         while num_rounds(log2_num_buckets)
             * next_check_per_elem_cost
             * (2f64.powf(log2_num_buckets).ceil() as usize)
@@ -187,7 +164,6 @@ fn get_max_bucket(
     }
 
     #[cfg(not(feature = "std"))]
->>>>>>> jonch/glv
     {
         let mut log2_num_buckets: u32 = 1;
         let num_rounds = |log2_num_buckets: u32| -> usize {

@@ -258,8 +258,6 @@ impl<P: Parameters> BatchGroupArithmetic for GroupAffine<P> {
         for (idx, idy) in index.iter() {
             let (mut a, mut b) = (&mut bases[*idx as usize], &mut other[*idy as usize]);
             batch_add_loop_1!(a, b, inversion_tmp);
-<<<<<<< HEAD
-=======
         }
 
         inversion_tmp = inversion_tmp.inverse().unwrap(); // this is always in Fp*
@@ -319,16 +317,10 @@ impl<P: Parameters> BatchGroupArithmetic for GroupAffine<P> {
                 new_elems.push(a);
                 scratch_space.push(Some(b));
             }
->>>>>>> jonch/glv
         }
 
         inversion_tmp = inversion_tmp.inverse().unwrap(); // this is always in Fp*
 
-<<<<<<< HEAD
-        for (idx, idy) in index.iter().rev() {
-            let (a, b) = (&mut bases[*idx as usize], other[*idy as usize]);
-            batch_add_loop_2!(a, b, inversion_tmp);
-=======
         for (a, op_b) in new_elems.iter_mut().rev().zip(scratch_space.iter().rev()) {
             match op_b {
                 Some(b) => {
@@ -359,7 +351,6 @@ impl<P: Parameters> BatchGroupArithmetic for GroupAffine<P> {
                 new_elems.push(a);
                 scratch_space.push(Some(b));
             }
->>>>>>> jonch/glv
         }
 
         inversion_tmp = inversion_tmp.inverse().unwrap(); // this is always in Fp*
