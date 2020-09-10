@@ -1,5 +1,6 @@
 use crate::{biginteger::BigInteger, AffineCurve, Field, Vec};
 use core::ops::Neg;
+use either::Either;
 use num_traits::Zero;
 
 /// We use a batch size that is big enough to amortise the cost of the actual inversion
@@ -36,26 +37,24 @@ where
         let half_size = 1 << (w - 1);
         let batch_size = bases.len();
 
-        let zero = Self::zero();
-        let mut tables = vec![zero; half_size * batch_size];
-
-        let mut a_2 = bases.to_vec();
-        let mut tmp = bases.to_vec();
-
+        let mut two_a = bases.to_vec();
         let instr = (0..batch_size).map(|x| x as u32).collect::<Vec<_>>();
-        Self::batch_double_in_place(&mut a_2, &instr[..], None);
+        Self::batch_double_in_place(&mut two_a, &instr[..], None);
 
-        for i in 0..half_size {
-            if i != 0 {
-                let instr = (0..batch_size)
-                    .map(|x| (x as u32, x as u32))
-                    .collect::<Vec<_>>();
-                Self::batch_add_in_place(&mut tmp, &mut a_2.to_vec()[..], &instr[..]);
-            }
+        let mut tables = Vec::<Self>::with_capacity(half_size * batch_size);
+        tables.extend_from_slice(bases);
+        let mut scratch_space = Vec::<Option<Self>>::with_capacity((batch_size - 1) / 2 + 1);
 
-            for (elem_id, &p) in tmp.iter().enumerate() {
-                tables[elem_id * half_size + i] = p.clone();
-            }
+        for i in 1..half_size {
+            let instr = (0..batch_size)
+                .map(|x| (((i - 1) * batch_size + x) as u32, x as u32))
+                .collect::<Vec<_>>();
+            Self::batch_add_write_read_self(
+                &two_a[..],
+                &instr[..],
+                &mut tables,
+                &mut scratch_space,
+            );
         }
         tables
     }
@@ -79,69 +78,44 @@ where
 
         let mut all_none = false;
 
-        match negate {
-            None => {
-                while !all_none {
-                    let mut opcode_row = Vec::with_capacity(batch_size);
-                    for s in scalars.iter_mut() {
-                        if s.is_zero() {
-                            opcode_row.push(None);
-                        } else {
-                            let op = if s.is_odd() {
-                                let mut z: i16 = (s.as_ref()[0] % (1 << (w + 1))) as i16;
+        if negate.is_some() {
+            assert_eq!(scalars.len(), negate.unwrap().len()); // precompute bounds check
+        }
 
-                                if z < half_window_size {
-                                    s.sub_noborrow(&BigInt::from(z as u64));
-                                } else {
-                                    z = z - window_size;
-                                    s.add_nocarry(&BigInt::from((-z) as u64));
-                                }
-                                z
-                            } else {
-                                0
-                            };
-                            opcode_row.push(Some(op));
-                            s.div2();
+        let f = false;
+        while !all_none {
+            let iter = match negate {
+                None => Either::Left(core::iter::repeat(&f).take(batch_size)),
+                Some(bools) => Either::Right(bools.iter()),
+            };
+            let mut opcode_row = Vec::with_capacity(batch_size);
+            for (s, &neg) in scalars.iter_mut().zip(iter) {
+                if s.is_zero() {
+                    opcode_row.push(None);
+                } else {
+                    let op = if s.is_odd() {
+                        let mut z: i16 = (s.as_ref()[0] % (1 << (w + 1))) as i16;
+                        if z < half_window_size {
+                            s.sub_noborrow(&BigInt::from(z as u64));
+                        } else {
+                            z = z - window_size;
+                            s.add_nocarry(&BigInt::from((-z) as u64));
                         }
-                    }
-                    all_none = opcode_row.iter().all(|x| x.is_none());
-                    if !all_none {
-                        op_code_vectorised.push(opcode_row);
-                    }
+                        if neg {
+                            -z
+                        } else {
+                            z
+                        }
+                    } else {
+                        0
+                    };
+                    opcode_row.push(Some(op));
+                    s.div2();
                 }
             }
-            Some(bools) => {
-                while !all_none {
-                    let mut opcode_row = Vec::with_capacity(batch_size);
-                    for (s, neg) in scalars.iter_mut().zip(bools) {
-                        if s.is_zero() {
-                            opcode_row.push(None);
-                        } else {
-                            let op = if s.is_odd() {
-                                let mut z: i16 = (s.as_ref()[0] % (1 << (w + 1))) as i16;
-                                if z < half_window_size {
-                                    s.sub_noborrow(&BigInt::from(z as u64));
-                                } else {
-                                    z = z - window_size;
-                                    s.add_nocarry(&BigInt::from((-z) as u64));
-                                }
-                                if *neg {
-                                    -z
-                                } else {
-                                    z
-                                }
-                            } else {
-                                0
-                            };
-                            opcode_row.push(Some(op));
-                            s.div2();
-                        }
-                    }
-                    all_none = opcode_row.iter().all(|x| x.is_none());
-                    if !all_none {
-                        op_code_vectorised.push(opcode_row);
-                    }
-                }
+            all_none = opcode_row.iter().all(|x| x.is_none());
+            if !all_none {
+                op_code_vectorised.push(opcode_row);
             }
         }
         op_code_vectorised
@@ -177,13 +151,30 @@ where
     /// Adds elements in bases with elements in other (for instance, a table), utilising
     /// a scratch space to store intermediate results.
     fn batch_add_in_place_read_only(
-        _bases: &mut [Self],
-        _other: &[Self],
-        _index: &[(u32, u32)],
-        _scratch_space: Option<&mut Vec<Self>>,
-    ) {
-        unimplemented!()
-    }
+        bases: &mut [Self],
+        other: &[Self],
+        index: &[(u32, u32)],
+        scratch_space: &mut Vec<Self>,
+    );
+
+    /// Lookups up group elements according to index, and either adds and writes or simply
+    /// writes them to new_elems, using scratch space to store intermediate values. Scratch
+    /// space is always cleared after use.
+    fn batch_add_write(
+        lookup: &[Self],
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<Self>,
+        scratch_space: &mut Vec<Option<Self>>,
+    );
+
+    /// Similar to batch_add_write, only that the lookup for the first operand is performed
+    /// in new_elems rather than lookup
+    fn batch_add_write_read_self(
+        lookup: &[Self],
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<Self>,
+        scratch_space: &mut Vec<Option<Self>>,
+    );
 
     /// Performs a batch scalar multiplication using the w-NAF encoding
     /// utilising the primitive batched ops
@@ -192,9 +183,9 @@ where
         scalars: &mut [BigInt],
         w: usize,
     ) {
+        let batch_size = bases.len();
         let opcode_vectorised = Self::batch_wnaf_opcode_recoding::<BigInt>(scalars, w, None);
         let tables = Self::batch_wnaf_tables(bases, w);
-        let half_size = 1 << (w - 1);
 
         // Set all points to 0;
         let zero = Self::zero();
@@ -219,9 +210,9 @@ where
                 .map(|(i, op)| {
                     let idx = op.unwrap();
                     if idx > 0 {
-                        tables[i * half_size + (idx as usize) / 2].clone()
+                        tables[(idx as usize) / 2 * batch_size + i].clone()
                     } else {
-                        tables[i * half_size + (-idx as usize) / 2].clone().neg()
+                        tables[(-idx as usize) / 2 * batch_size + i].clone().neg()
                     }
                 })
                 .collect();
@@ -272,6 +263,13 @@ pub trait BatchGroupArithmeticSlice<G: AffineCurve> {
 
     fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]);
 
+    fn batch_add_write(
+        &self,
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<G>,
+        scratch_space: &mut Vec<Option<G>>,
+    );
+
     fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize);
 }
 
@@ -286,6 +284,15 @@ impl<G: AffineCurve> BatchGroupArithmeticSlice<G> for [G] {
 
     fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]) {
         G::batch_add_in_place(self, other, index);
+    }
+
+    fn batch_add_write(
+        &self,
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<G>,
+        scratch_space: &mut Vec<Option<G>>,
+    ) {
+        G::batch_add_write(self, index, new_elems, scratch_space);
     }
 
     fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize) {

@@ -1,7 +1,7 @@
 use crate::{
     batch_bucketed_add,
     prelude::{AffineCurve, BigInteger, FpParameters, One, PrimeField, ProjectiveCurve, Zero},
-    Vec,
+    BucketPosition, Vec,
 };
 
 #[cfg(feature = "parallel")]
@@ -43,6 +43,7 @@ impl VariableBaseMSM {
                 // We don't need the "zero" bucket, so we only have 2^c - 1 buckets
                 let log2_n_bucket = if (w_start % c) != 0 { w_start % c } else { c };
                 let mut buckets = vec![zero; (1 << log2_n_bucket) - 1];
+
                 scalars
                     .iter()
                     .zip(bases)
@@ -113,9 +114,9 @@ impl VariableBaseMSM {
         num_bits: usize,
     ) -> G::Projective {
         let c = if scalars.len() < 32 {
-            3
+            1
         } else {
-            super::ln_without_floats(scalars.len()) + 2
+            super::ln_without_floats(scalars.len()) + 1
         };
 
         let zero = G::Projective::zero();
@@ -135,9 +136,11 @@ impl VariableBaseMSM {
                 let log2_n_bucket = if (w_start % c) != 0 { w_start % c } else { c };
                 let n_buckets = (1 << log2_n_bucket) - 1;
 
-                let scalars = scalars
+                let _now = timer!();
+                let mut bucket_positions: Vec<_> = scalars
                     .iter()
-                    .map(|&scalar| {
+                    .enumerate()
+                    .map(|(pos, &scalar)| {
                         let mut scalar = scalar;
 
                         // We right-shift by w_start, thus getting rid of the
@@ -145,22 +148,33 @@ impl VariableBaseMSM {
                         scalar.divn(w_start as u32);
 
                         // We mod the remaining bits by the window size.
-                        (scalar.as_ref()[0] % (1 << c)) as i64
+                        let res = (scalar.as_ref()[0] % (1 << c)) as i32;
+                        BucketPosition {
+                            bucket: (res - 1) as u32,
+                            position: pos as u32,
+                        }
                     })
-                    .map(|s| (s - 1) as usize)
-                    .collect::<Vec<usize>>();
+                    .collect();
+                timer_println!(_now, "scalars->buckets");
 
-                let mut elems = bases.to_vec();
-
+<<<<<<< HEAD
                 let buckets =
                     batch_bucketed_add::<G>(n_buckets, &mut elems[..], scalars.as_slice());
+=======
+                let _now = timer!();
+                let buckets =
+                    batch_bucketed_add::<G>(n_buckets, &bases[..], &mut bucket_positions[..]);
+                timer_println!(_now, "bucket add");
+>>>>>>> jonch/glv
 
+                let _now = timer!();
                 let mut res = zero;
                 let mut running_sum = G::Projective::zero();
                 for b in buckets.into_iter().rev() {
                     running_sum.add_assign_mixed(&b);
                     res += &running_sum;
                 }
+                timer_println!(_now, "accumulating sums");
                 (res, log2_n_bucket)
             })
             .collect();

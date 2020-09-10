@@ -1,76 +1,6 @@
 #[macro_export]
-macro_rules! specialise_affine_to_proj {
-    ($GroupProjective: ident) => {
-        use crate::curves::batch_arith::decode_endo_from_u32;
-        #[cfg(feature = "prefetch")]
-        use crate::prefetch;
-
-        #[derive(Derivative)]
-        #[derivative(
-            Copy(bound = "P: Parameters"),
-            Clone(bound = "P: Parameters"),
-            PartialEq(bound = "P: Parameters"),
-            Eq(bound = "P: Parameters"),
-            Debug(bound = "P: Parameters"),
-            Hash(bound = "P: Parameters")
-        )]
-        #[repr(C)]
-        pub struct GroupAffine<P: Parameters> {
-            pub infinity: bool,
-            pub x: P::BaseField,
-            pub y: P::BaseField,
-            #[derivative(Debug = "ignore")]
-            _params: PhantomData<P>,
-        }
-
-        impl<P: Parameters> AffineCurve for GroupAffine<P> {
-            const COFACTOR: &'static [u64] = P::COFACTOR;
-            type BaseField = P::BaseField;
-            type ScalarField = P::ScalarField;
-            type Projective = $GroupProjective<P>;
-
-            fn prime_subgroup_generator() -> Self {
-                Self::new(
-                    P::AFFINE_GENERATOR_COEFFS.0,
-                    P::AFFINE_GENERATOR_COEFFS.1,
-                    false,
-                )
-            }
-
-            fn from_random_bytes(bytes: &[u8]) -> Option<Self> {
-                P::BaseField::from_random_bytes_with_flags(bytes).and_then(|(x, flags)| {
-                    let infinity_flag_mask = SWFlags::Infinity.u8_bitmask();
-                    let positive_flag_mask = SWFlags::PositiveY.u8_bitmask();
-                    // if x is valid and is zero and only the infinity flag is set, then parse this
-                    // point as infinity. For all other choices, get the original point.
-                    if x.is_zero() && flags == infinity_flag_mask {
-                        Some(Self::zero())
-                    } else {
-                        let is_positive = flags & positive_flag_mask != 0;
-                        Self::get_point_from_x(x, is_positive)
-                    }
-                })
-            }
-
-            fn mul<S: Into<<Self::ScalarField as PrimeField>::BigInt>>(
-                &self,
-                by: S,
-            ) -> Self::Projective {
-                let bits = BitIterator::new(by.into());
-                self.mul_bits(bits)
-            }
-
-            #[inline]
-            fn mul_by_cofactor_to_projective(&self) -> Self::Projective {
-                self.scale_by_cofactor()
-            }
-
-            fn mul_by_cofactor_inv(&self) -> Self {
-                self.mul(P::COFACTOR_INV).into()
-            }
-        }
-
-<<<<<<< HEAD
+macro_rules! impl_sw_batch_affine {
+    ($GroupAffine: ident) => {
         #[cfg(feature = "prefetch")]
         macro_rules! prefetch_slice {
             ($slice_1: ident, $slice_2: ident, $prefetch_iter: ident) => {
@@ -94,6 +24,18 @@ macro_rules! specialise_affine_to_proj {
                     let (idp_2, _) = decode_endo_from_u32(*idp_2);
                     prefetch::<Self>(&mut $slice_1[*idp_1 as usize]);
                     prefetch::<Self>(&$slice_2[idp_2]);
+                }
+            };
+        }
+
+        #[cfg(feature = "prefetch")]
+        macro_rules! prefetch_slice_write {
+            ($slice_1: ident, $slice_2: ident, $prefetch_iter: ident) => {
+                if let Some((idp_1, idp_2)) = $prefetch_iter.next() {
+                    prefetch::<Self>(&$slice_1[*idp_1 as usize]);
+                    if *idp_2 != !0u32 {
+                        prefetch::<Self>(&$slice_2[*idp_2 as usize]);
+                    }
                 }
             };
         }
@@ -155,7 +97,7 @@ macro_rules! specialise_affine_to_proj {
             };
         }
 
-        impl<P: Parameters> BatchGroupArithmetic for GroupAffine<P> {
+        impl<P: Parameters> BatchGroupArithmetic for $GroupAffine<P> {
             type BBaseField = P::BaseField;
             /// This implementation of batch group ops takes particular
             /// care to make most use of points fetched from memory to prevent reallocations
@@ -338,20 +280,10 @@ macro_rules! specialise_affine_to_proj {
                 bases: &mut [Self],
                 other: &[Self],
                 index: &[(u32, u32)],
-                scratch_space: Option<&mut Vec<Self>>,
+                scratch_space: &mut Vec<Self>,
             ) {
                 let mut inversion_tmp = P::BaseField::one();
                 let mut half = None;
-
-                let mut _scratch_space_inner = if scratch_space.is_none() {
-                    Vec::<Self>::with_capacity(index.len())
-                } else {
-                    vec![]
-                };
-                let scratch_space = match scratch_space {
-                    Some(vec) => vec,
-                    None => &mut _scratch_space_inner,
-                };
 
                 #[cfg(feature = "prefetch")]
                 let mut prefetch_iter = index.iter();
@@ -372,6 +304,7 @@ macro_rules! specialise_affine_to_proj {
                     } else {
                         other[idy]
                     };
+
                     batch_add_loop_1!(a, b, half, inversion_tmp);
                     scratch_space.push(b);
                 }
@@ -396,154 +329,94 @@ macro_rules! specialise_affine_to_proj {
                     batch_add_loop_2!(a, b, inversion_tmp);
                 }
             }
-        }
 
-=======
->>>>>>> jonch/glv
-        impl<P: Parameters> GroupAffine<P> {
-            pub fn new(x: P::BaseField, y: P::BaseField, infinity: bool) -> Self {
-                Self {
-                    x,
-                    y,
-                    infinity,
-                    _params: PhantomData,
-                }
-            }
+            fn batch_add_write(
+                lookup: &[Self],
+                index: &[(u32, u32)],
+                new_elems: &mut Vec<Self>,
+                scratch_space: &mut Vec<Option<Self>>,
+            ) {
+                let mut inversion_tmp = P::BaseField::one();
+                let mut half = None;
 
-            pub fn scale_by_cofactor(&self) -> <Self as AffineCurve>::Projective {
-                self.mul_bits(BitIterator::new(P::COFACTOR))
-            }
+                #[cfg(feature = "prefetch")]
+                let mut prefetch_iter = index.iter();
+                #[cfg(feature = "prefetch")]
+                prefetch_iter.next();
 
-            pub(crate) fn mul_bits<S: AsRef<[u64]>>(
-                &self,
-                bits: BitIterator<S>,
-            ) -> <Self as AffineCurve>::Projective {
-                let mut res = <Self as AffineCurve>::Projective::zero();
-                for i in bits {
-                    res.double_in_place();
-                    if i {
-                        res.add_assign_mixed(&self)
+                // We run two loops over the data separated by an inversion
+                for (idx, idy) in index.iter() {
+                    #[cfg(feature = "prefetch")]
+                    prefetch_slice_write!(lookup, lookup, prefetch_iter);
+
+                    if *idy == !0u32 {
+                        new_elems.push(lookup[*idx as usize]);
+                        scratch_space.push(None);
+                    } else {
+                        let (mut a, mut b) = (lookup[*idx as usize], lookup[*idy as usize]);
+                        batch_add_loop_1!(a, b, half, inversion_tmp);
+                        new_elems.push(a);
+                        scratch_space.push(Some(b));
                     }
                 }
-                res
-            }
 
-            /// Attempts to construct an affine point given an x-coordinate. The
-            /// point is not guaranteed to be in the prime order subgroup.
-            ///
-            /// If and only if `greatest` is set will the lexicographically
-            /// largest y-coordinate be selected.
-            #[allow(dead_code)]
-            pub fn get_point_from_x(x: P::BaseField, greatest: bool) -> Option<Self> {
-                // Compute x^3 + ax + b
-                let x3b = P::add_b(&((x.square() * &x) + &P::mul_by_a(&x)));
+                inversion_tmp = inversion_tmp.inverse().unwrap(); // this is always in Fp*
 
-                x3b.sqrt().map(|y| {
-                    let negy = -y;
-
-                    let y = if (y < negy) ^ greatest { y } else { negy };
-                    Self::new(x, y, false)
-                })
-            }
-
-            /// Checks that the current point is on the elliptic curve.
-            pub fn is_on_curve(&self) -> bool {
-                if self.is_zero() {
-                    true
-                } else {
-                    // Check that the point is on the curve
-                    let y2 = self.y.square();
-                    let x3b = P::add_b(&((self.x.square() * &self.x) + &P::mul_by_a(&self.x)));
-                    y2 == x3b
+                for (a, op_b) in new_elems.iter_mut().rev().zip(scratch_space.iter().rev()) {
+                    match op_b {
+                        Some(b) => {
+                            let b_ = *b;
+                            batch_add_loop_2!(a, b_, inversion_tmp);
+                        }
+                        None => (),
+                    };
                 }
+                scratch_space.clear();
             }
 
-            /// Checks that the current point is in the prime order subgroup given
-            /// the point on the curve.
-            pub fn is_in_correct_subgroup_assuming_on_curve(&self) -> bool {
-                self.mul_bits(BitIterator::new(P::ScalarField::characteristic()))
-                    .is_zero()
-            }
-        }
+            fn batch_add_write_read_self(
+                lookup: &[Self],
+                index: &[(u32, u32)],
+                new_elems: &mut Vec<Self>,
+                scratch_space: &mut Vec<Option<Self>>,
+            ) {
+                let mut inversion_tmp = P::BaseField::one();
+                let mut half = None;
 
-        impl<P: Parameters> Display for GroupAffine<P> {
-            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-                if self.infinity {
-                    write!(f, "GroupAffine(Infinity)")
-                } else {
-                    write!(f, "GroupAffine(x={}, y={})", self.x, self.y)
+                #[cfg(feature = "prefetch")]
+                let mut prefetch_iter = index.iter();
+                #[cfg(feature = "prefetch")]
+                prefetch_iter.next();
+
+                // We run two loops over the data separated by an inversion
+                for (idx, idy) in index.iter() {
+                    #[cfg(feature = "prefetch")]
+                    prefetch_slice_write!(new_elems, lookup, prefetch_iter);
+
+                    if *idy == !0u32 {
+                        new_elems.push(lookup[*idx as usize]);
+                        scratch_space.push(None);
+                    } else {
+                        let (mut a, mut b) = (new_elems[*idx as usize], lookup[*idy as usize]);
+                        batch_add_loop_1!(a, b, half, inversion_tmp);
+                        new_elems.push(a);
+                        scratch_space.push(Some(b));
+                    }
                 }
-            }
-        }
 
-        impl<P: Parameters> Zero for GroupAffine<P> {
-            fn zero() -> Self {
-                Self::new(P::BaseField::zero(), P::BaseField::one(), true)
-            }
+                inversion_tmp = inversion_tmp.inverse().unwrap(); // this is always in Fp*
 
-            fn is_zero(&self) -> bool {
-                self.infinity
-            }
-        }
-
-        impl<P: Parameters> Add<Self> for GroupAffine<P> {
-            type Output = Self;
-            fn add(self, other: Self) -> Self {
-                let mut copy = self;
-                copy += &other;
-                copy
-            }
-        }
-
-        impl<'a, P: Parameters> AddAssign<&'a Self> for GroupAffine<P> {
-            fn add_assign(&mut self, other: &'a Self) {
-                let mut s_proj = <Self as AffineCurve>::Projective::from(*self);
-                s_proj.add_assign_mixed(other);
-                *self = s_proj.into();
-            }
-        }
-
-        impl<P: Parameters> Neg for GroupAffine<P> {
-            type Output = Self;
-
-            #[inline]
-            fn neg(self) -> Self {
-                if !self.is_zero() {
-                    Self::new(self.x, -self.y, false)
-                } else {
-                    self
+                for (a, op_b) in new_elems.iter_mut().rev().zip(scratch_space.iter().rev()) {
+                    match op_b {
+                        Some(b) => {
+                            let b_ = *b;
+                            batch_add_loop_2!(a, b_, inversion_tmp);
+                        }
+                        None => (),
+                    };
                 }
+                scratch_space.clear();
             }
         }
-
-        impl_sw_batch_affine!(GroupAffine);
-
-        impl<P: Parameters> ToBytes for GroupAffine<P> {
-            #[inline]
-            fn write<W: Write>(&self, mut writer: W) -> IoResult<()> {
-                self.x.write(&mut writer)?;
-                self.y.write(&mut writer)?;
-                self.infinity.write(writer)
-            }
-        }
-
-        impl<P: Parameters> FromBytes for GroupAffine<P> {
-            #[inline]
-            fn read<R: Read>(mut reader: R) -> IoResult<Self> {
-                let x = P::BaseField::read(&mut reader)?;
-                let y = P::BaseField::read(&mut reader)?;
-                let infinity = bool::read(reader)?;
-                Ok(Self::new(x, y, infinity))
-            }
-        }
-
-        impl<P: Parameters> Default for GroupAffine<P> {
-            #[inline]
-            fn default() -> Self {
-                Self::zero()
-            }
-        }
-
-        impl_sw_curve_serializer!(Parameters);
     };
 }

@@ -1,10 +1,6 @@
-use algebra_core::{
-    curves::{AffineCurve, ProjectiveCurve},
-    test_rng,
-};
-use rand::Rng;
-
+#![allow(unused_imports)]
 use crate::ed_on_cp6_782::*;
+<<<<<<< HEAD
 
 use crate::tests::{curves::*, groups::*};
 
@@ -63,3 +59,6 @@ fn test_conversion() {
 fn test_montgomery_conversion() {
     montgomery_conversion_test::<EdwardsParameters>();
 }
+=======
+edwards_curve_tests!();
+>>>>>>> jonch/glv

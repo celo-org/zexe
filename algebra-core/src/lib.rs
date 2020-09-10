@@ -22,6 +22,9 @@ extern crate std;
 #[doc(hidden)]
 pub extern crate alloc;
 
+#[cfg(any(feature = "timing", feature = "timing_detailed"))]
+pub extern crate backtrace;
+
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)]
 #[doc(hidden)]
@@ -45,6 +48,10 @@ pub use std::{
     vec,
     vec::Vec,
 };
+
+#[macro_use]
+pub mod timing;
+pub use timing::*;
 
 #[macro_use]
 extern crate derivative;
