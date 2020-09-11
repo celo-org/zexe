@@ -85,9 +85,10 @@ jobs:
             args: --all -- --skip dpc --skip integration_test
       
       - name: Test algebra
-      - run: | 
+        run: | 
           cd algebra
           cargo test --features full
+          cd ..
 
   check_no_std:
     name: Check no_std
