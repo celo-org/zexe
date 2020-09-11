@@ -22,9 +22,11 @@ macro_rules! timer_println {
                 "batch_bucketed_add",
                 "verify_points",
                 "batch_scalar_mul_in_place",
+                "multi_scalar_mul_batched",
             ];
 
-            let whitelisted_functions: Vec<&'static str> = vec!["verify_points"];
+            let whitelisted_functions: Vec<&'static str> =
+                vec!["batch_bucketed_add", "multi_scalar_mul_batched"];
 
             let blacklisted_parent_functions: Vec<&'static str> = vec![];
             let whitelisted_parent_functions: Vec<&'static str> = vec![];
@@ -84,14 +86,6 @@ macro_rules! timer_println {
                 };
 
                 if !blacklisted && whitelisted_parents {
-                    if cfg!(feature = "timing") {
-                        let std_info = format!("[{:^28}] {} us", $string, elapsed);
-                        #[cfg(feature = "timing_thread_id")]
-                        let std_info =
-                            format!("{:25} {}", format!("(tid: {})", thread_id::get()), std_info);
-                        println!("{}", std_info);
-                    }
-
                     if cfg!(feature = "timing_detailed") {
                         let std_info = format!(
                             "{:30} {:26} [{:^28}] {} us",
@@ -105,6 +99,12 @@ macro_rules! timer_println {
                             $string,
                             elapsed
                         );
+                        #[cfg(feature = "timing_thread_id")]
+                        let std_info =
+                            format!("{:25} {}", format!("(tid: {})", thread_id::get()), std_info);
+                        println!("{}", std_info);
+                    } else if cfg!(feature = "timing") {
+                        let std_info = format!("[{:^28}] {} us", $string, elapsed);
                         #[cfg(feature = "timing_thread_id")]
                         let std_info =
                             format!("{:25} {}", format!("(tid: {})", thread_id::get()), std_info);

@@ -234,7 +234,6 @@ macro_rules! impl_sw_batch_affine {
                 #[cfg(feature = "prefetch")]
                 {
                     prefetch_iter.next();
-                    prefetch_iter.next();
                 }
 
                 // We run two loops over the data separated by an inversion
@@ -257,7 +256,6 @@ macro_rules! impl_sw_batch_affine {
                 let mut prefetch_iter = index.iter().rev();
                 #[cfg(feature = "prefetch")]
                 {
-                    prefetch_iter.next();
                     prefetch_iter.next();
                 }
 
@@ -342,7 +340,9 @@ macro_rules! impl_sw_batch_affine {
                 #[cfg(feature = "prefetch")]
                 let mut prefetch_iter = index.iter();
                 #[cfg(feature = "prefetch")]
-                prefetch_iter.next();
+                {
+                    prefetch_iter.next();
+                }
 
                 // We run two loops over the data separated by an inversion
                 for (idx, idy) in index.iter() {
