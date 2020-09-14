@@ -140,37 +140,6 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
     res
 }
 
-
-#[cfg(not(feature = "std"))]
-pub fn batch_bucketed_add_multiple<C: AffineCurve>(
-    buckets: usize,
-    elems: &[C],
-    bucket_positions: &mut [BucketPosition],
-) -> Vec<Vec<C>> {
-    assert_eq!(buckets_vec.len(), bucket_positions_vec.len());
-
-    let zero = C::zero();
-    let mut res: Vec<Vec<C>> = buckets_vec
-        .iter()
-        .map(|&buckets| vec![zero; buckets])
-        .collect();
-
-    for ((&buckets, bucket_positions), res_single) in buckets_vec
-        .iter()
-        .zip(bucket_positions_vec.iter_mut())
-        .zip(res.iter_mut())
-    {
-        batch_bucketed_add_inner(
-            buckets,
-            0,
-            elems,
-            &mut bucket_positions[..],
-            &mut res_single[..],
-        );
-    }
-    res
-}
-
 #[cfg(feature = "std")]
 pub fn batch_bucketed_add<C: AffineCurve>(
     buckets: usize,
@@ -349,6 +318,51 @@ pub fn batch_bucketed_add<C: AffineCurve>(
     elems: &[C],
     bucket_assign: &[BucketPosition],
 ) -> Vec<C> {
+    assert_eq!(elems.len(), bucket_assign.len());
+
+    let zero = C::zero();
+    let mut res = vec![zero; buckets];
+
+    batch_bucketed_add_inner(buckets, elems, bucket_assign, &mut res);
+    res
+}
+
+#[cfg(not(feature = "std"))]
+pub fn batch_bucketed_add_multiple<C: AffineCurve>(
+    buckets_vec: &[usize],
+    elems: &[C],
+    bucket_positions_vec: &mut [Vec<BucketPosition>],
+    _parallelism: usize,
+) -> Vec<Vec<C>> {
+    assert_eq!(buckets_vec.len(), bucket_positions_vec.len());
+
+    let zero = C::zero();
+    let mut res: Vec<Vec<C>> = buckets_vec
+        .iter()
+        .map(|&buckets| vec![zero; buckets])
+        .collect();
+
+    for ((&buckets, bucket_positions), res_single) in buckets_vec
+        .iter()
+        .zip(bucket_positions_vec.iter_mut())
+        .zip(res.iter_mut())
+    {
+        batch_bucketed_add_inner(
+            buckets,
+            elems,
+            &mut bucket_positions[..],
+            &mut res_single[..],
+        );
+    }
+    res
+}
+#[cfg(not(feature = "std"))]
+pub fn batch_bucketed_add_inner<C: AffineCurve>(
+    buckets: usize,
+    elems: &[C],
+    bucket_assign: &[BucketPosition],
+    res: &mut [C],
+) {
     let mut elems = elems.to_vec();
     let num_split = 2i32.pow(log2(buckets) / 2 + 2) as usize;
     let split_size = (buckets - 1) / num_split + 1;

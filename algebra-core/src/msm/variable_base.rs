@@ -1,5 +1,5 @@
 use crate::{
-    batch_bucketed_add, batch_bucketed_add_multiple,
+    batch_bucketed_add, batch_bucketed_add_multiple, cfg_chunks, cfg_iter,
     prelude::{AffineCurve, BigInteger, FpParameters, One, PrimeField, ProjectiveCurve, Zero},
     BucketPosition, Vec,
 };
@@ -217,11 +217,9 @@ impl VariableBaseMSM {
             n_buckets.push(1 << log2_n_bucket);
 
             let _now = timer!();
-            let mut bucket_positions_all: Vec<Vec<_>> = window_starts
-                .par_iter()
+            let mut bucket_positions_all: Vec<Vec<_>> = cfg_iter!(window_starts)
                 .map(|w_start| {
-                    let bucket_positions: Vec<_> = scalars
-                        .par_iter()
+                    let bucket_positions: Vec<_> = cfg_iter!(scalars)
                         .enumerate()
                         .map(|(pos, &scalar)| {
                             let mut scalar = scalar;
@@ -253,13 +251,11 @@ impl VariableBaseMSM {
             timer_println!(_now, "bucket add");
 
             let _now = timer!();
-            let window_sums: Vec<_> = buckets_all
-                .par_iter()
+            let window_sums: Vec<_> = cfg_iter!(buckets_all)
                 .map(|bucket_v| {
                     let len = bucket_v.len();
                     let chunk_size = (len - 1) / PARALLELISM + 1;
-                    bucket_v
-                        .par_chunks(chunk_size)
+                    cfg_chunks!(bucket_v, chunk_size)
                         .enumerate()
                         .map(|(i, buckets_full)| {
                             let first = buckets_full[0];
