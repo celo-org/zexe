@@ -197,7 +197,7 @@ impl VariableBaseMSM {
         scalars: &[BigInt],
         num_bits: usize,
     ) -> G::Projective {
-        if cfg!(not(feature = "parallel")) {
+        if cfg!(not(any(feature = "parallel", feature = "std"))) {
             Self::multi_scalar_mul_batched::<G, BigInt>(bases, scalars, num_bits)
         } else {
             const PARALLELISM: usize = 1;

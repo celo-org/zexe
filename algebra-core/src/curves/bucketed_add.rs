@@ -127,6 +127,7 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
             .zip(bucket_positions_vec.iter_mut())
             .zip(res.iter_mut())
         {
+            assert_eq!(elems.len(), bucket_positions.len());
             batch_bucketed_add_inner(
                 buckets,
                 0,
@@ -135,6 +136,37 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
                 &mut res_single[..],
             );
         }
+    }
+    res
+}
+
+
+#[cfg(not(feature = "std"))]
+pub fn batch_bucketed_add_multiple<C: AffineCurve>(
+    buckets: usize,
+    elems: &[C],
+    bucket_positions: &mut [BucketPosition],
+) -> Vec<Vec<C>> {
+    assert_eq!(buckets_vec.len(), bucket_positions_vec.len());
+
+    let zero = C::zero();
+    let mut res: Vec<Vec<C>> = buckets_vec
+        .iter()
+        .map(|&buckets| vec![zero; buckets])
+        .collect();
+
+    for ((&buckets, bucket_positions), res_single) in buckets_vec
+        .iter()
+        .zip(bucket_positions_vec.iter_mut())
+        .zip(res.iter_mut())
+    {
+        batch_bucketed_add_inner(
+            buckets,
+            0,
+            elems,
+            &mut bucket_positions[..],
+            &mut res_single[..],
+        );
     }
     res
 }
@@ -309,15 +341,6 @@ pub fn batch_bucketed_add_inner<C: AffineCurve>(
         res[bp.bucket as usize] = new_elems[bp.position as usize];
     }
     timer_println!(_now, "reassign");
-}
-
-#[cfg(not(feature = "std"))]
-pub fn batch_bucketed_add_parallel<C: AffineCurve>(
-    buckets: usize,
-    elems: &[C],
-    bucket_positions: &mut [BucketPosition],
-) -> Vec<C> {
-    batch_bucketed_add(buckets, elems, bucket_positions)
 }
 
 #[cfg(not(feature = "std"))]

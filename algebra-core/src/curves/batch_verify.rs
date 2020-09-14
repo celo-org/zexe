@@ -256,11 +256,11 @@ fn get_max_bucket_recursive(
 
     #[cfg(not(feature = "std"))]
     {
-        let new_security_param = new_security_param as usize;
+        let security_param = security_param as usize;
         let log2_constant_multiplier = if is_first { 1 } else { 2 };
         let mut log2_num_buckets: u32 = 1;
         let num_rounds = |log2_num_buckets: u32| -> usize {
-            (security_param - 1) / (log2_num_buckets as usize) + 1
+            (security_param as usize - 1) / (log2_num_buckets as usize) + 1
         };
 
         while num_rounds(log2_num_buckets)
@@ -274,7 +274,7 @@ fn get_max_bucket_recursive(
         (
             2_i32.pow(log2_num_buckets + log2_constant_multiplier) as usize, // number of buckets
             num_rounds(log2_num_buckets),                                    // number of rounds
-            (log2_num_buckets as usize + log2_constant_multiplier) as f64,   // new security param
+            (log2_num_buckets + log2_constant_multiplier) as f64,   // new security param
         )
     }
 }
