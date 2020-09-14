@@ -1,6 +1,6 @@
 #![allow(unused)]
 use algebra_core::{
-    batch_bucketed_add, batch_verify_in_subgroup,
+    batch_bucketed_add, batch_verify_in_subgroup, batch_verify_in_subgroup_recursive,
     biginteger::BigInteger64,
     curves::{AffineCurve, BatchGroupArithmeticSlice, ProjectiveCurve},
     io::Cursor,
@@ -523,6 +523,15 @@ macro_rules! batch_verify_test {
                 .expect("Should have verified as correct");
             println!(
                 "Success: In Subgroup. n: {}, time: {}",
+                n_elems,
+                now.elapsed().as_micros()
+            );
+
+            let now = std::time::Instant::now();
+            batch_verify_in_subgroup_recursive::<$GroupAffine<P>, XorShiftRng>(&tmp_elems[..], SECURITY_PARAM, &mut rng)
+                .expect("Should have verified as correct");
+            println!(
+                "Success: In Subgroup. n: {}, time: {} (recursive)",
                 n_elems,
                 now.elapsed().as_micros()
             );

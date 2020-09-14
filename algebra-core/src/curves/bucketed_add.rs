@@ -3,6 +3,9 @@ use crate::{
     AffineCurve, Vec,
 };
 
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
 #[cfg(feature = "std")]
 use {core::cmp::Ordering, voracious_radix_sort::*};
 
@@ -37,7 +40,93 @@ impl PartialEq for BucketPosition {
     }
 }
 
-#[inline]
+const NUM_GROUPS: usize = 8;
+
+/// This does the same thing as batch_bucketed_add, but parallelises
+/// jobs over fixed number of threads.
+#[cfg(feature = "std")]
+pub fn batch_bucketed_add_multiple<C: AffineCurve>(
+    buckets_vec: &[usize],
+    elems: &[C],
+    bucket_positions_vec: &mut [Vec<BucketPosition>],
+) -> Vec<Vec<C>> {
+    assert_eq!(buckets_vec.len(), bucket_positions_vec.len());
+
+    let zero = C::zero();
+    let mut res: Vec<Vec<C>> = buckets_vec.iter().map(|&buckets| vec![zero; buckets]).collect();
+
+    if cfg!(feature = "parallel") && elems.len() >= BATCH_SIZE * (1 << 4) {
+        let mut split_pointers_vec = buckets_vec.par_iter()
+            .zip(bucket_positions_vec.par_iter_mut())
+            .zip(res.par_iter_mut())
+            .map(|((&buckets, bucket_positions_v), res_single)| {
+                assert_eq!(elems.len(), bucket_positions_v.len());
+
+                let mut res_ref = &mut res_single[..];
+                let mut bucket_positions = &mut bucket_positions_v[..];
+
+                let _now = timer!();
+                dlsd_radixsort(bucket_positions, 8);
+                timer_println!(_now, "radixsort");
+
+                let n_groups = NUM_GROUPS;
+                let group_size = ((buckets - 1) / n_groups + 1) as u32;
+
+                let mut pointer = 0;
+                let mut group_count = 0u32;
+                let mut buckets_left = buckets;
+                let mut prev_bucket = 0;
+
+                let mut split_pointers = Vec::with_capacity(n_groups);
+
+                while pointer < bucket_positions.len() {
+                    let current_bucket = bucket_positions[pointer].bucket;
+                    if current_bucket > (group_count + 1) * group_size && current_bucket < buckets as u32 {
+                        // Since group_size is > 0, current_bucket > 0
+                        let buckets_consumed = (current_bucket - prev_bucket) as usize;
+
+                        let (bottom, top) = bucket_positions.split_at_mut(pointer);
+                        let (bottom_res, top_res) = res_ref.split_at_mut(buckets_consumed);
+
+                        split_pointers.push((buckets_consumed, prev_bucket, bottom, bottom_res));
+
+                        bucket_positions = top;
+                        res_ref = top_res;
+
+                        buckets_left -= buckets_consumed;
+                        prev_bucket = current_bucket;
+                        group_count += 1;
+                        pointer = 0;
+                    }
+                    // We have to check every assignment as we need to ascertain the boundaries.
+                    // A faster method is binary search on sorted array. But this method is 0.1% of total runtime.
+                    pointer += 1;
+                }
+                // push remaining assignments
+                split_pointers.push((buckets_left, prev_bucket, bucket_positions, res_ref));
+                split_pointers
+            }
+        ).collect::<Vec<_>>();
+        let _now = timer!();
+        rayon::scope(|s| {
+            for split_pointers in split_pointers_vec.iter_mut() {
+                for (buckets, offset, bp, r) in split_pointers.iter_mut() {
+                    s.spawn(move |_| batch_bucketed_add_inner(*buckets, *offset, elems, bp, r));
+                }
+            }
+        });
+        timer_println!(_now, "bucket add multiple");
+    } else {
+        for ((&buckets, bucket_positions), res_single) in buckets_vec.iter()
+            .zip(bucket_positions_vec.iter_mut())
+            .zip(res.iter_mut())
+        {
+            batch_bucketed_add_inner(buckets, 0, elems, &mut bucket_positions[..], &mut res_single[..]);
+        }
+    }
+    res
+}
+
 #[cfg(feature = "std")]
 pub fn batch_bucketed_add<C: AffineCurve>(
     buckets: usize,
@@ -45,11 +134,28 @@ pub fn batch_bucketed_add<C: AffineCurve>(
     bucket_positions: &mut [BucketPosition],
 ) -> Vec<C> {
     assert_eq!(elems.len(), bucket_positions.len());
-    assert!(elems.len() > 0);
 
     let _now = timer!();
     dlsd_radixsort(bucket_positions, 8);
     timer_println!(_now, "radixsort");
+
+    let zero = C::zero();
+    let mut res = vec![zero; buckets];
+    batch_bucketed_add_inner(buckets, 0, elems, bucket_positions, &mut res[..]);
+    res
+}
+
+#[inline]
+#[cfg(feature = "std")]
+#[inline]
+pub fn batch_bucketed_add_inner<C: AffineCurve>(
+    buckets: usize,
+    offset: u32,
+    elems: &[C],
+    bucket_positions: &mut [BucketPosition],
+    res: &mut [C],
+) {
+    assert!(elems.len() > 0);
 
     let mut len = bucket_positions.len();
     let mut all_ones = true;
@@ -72,7 +178,7 @@ pub fn batch_bucketed_add<C: AffineCurve>(
             glob += 1;
             loc += 1;
         }
-        if current_bucket >= buckets as u32 {
+        if current_bucket >= buckets as u32 + offset {
             loc = 1;
         } else if loc > 1 {
             // all ones is false if next len is not 1
@@ -87,14 +193,14 @@ pub fn batch_bucketed_add<C: AffineCurve>(
                     bucket_positions[glob - (loc - 1) + 2 * i + 1].position,
                 ));
                 bucket_positions[new_len + i] = BucketPosition {
-                    bucket: current_bucket,
+                    bucket: current_bucket - offset,
                     position: (new_len + i) as u32,
                 };
             }
             if is_odd {
                 instr.push((bucket_positions[glob].position, !0u32));
                 bucket_positions[new_len + half] = BucketPosition {
-                    bucket: current_bucket,
+                    bucket: current_bucket - offset,
                     position: (new_len + half) as u32,
                 };
             }
@@ -114,7 +220,7 @@ pub fn batch_bucketed_add<C: AffineCurve>(
         } else {
             instr.push((bucket_positions[glob].position, !0u32));
             bucket_positions[new_len] = BucketPosition {
-                bucket: current_bucket,
+                bucket: current_bucket - offset,
                 position: new_len as u32,
             };
             new_len += 1;
@@ -186,16 +292,20 @@ pub fn batch_bucketed_add<C: AffineCurve>(
     }
     timer_println!(_now, "addition tree");
 
-    let zero = C::zero();
-    let mut res = vec![zero; buckets];
-
     let _now = timer!();
-    for i in 0..len {
-        let (pos, buc) = (bucket_positions[i].position, bucket_positions[i].bucket);
-        res[buc as usize] = new_elems[pos as usize];
+    for bp in bucket_positions[..len].iter() {
+        res[bp.bucket as usize] = new_elems[bp.position as usize];
     }
     timer_println!(_now, "reassign");
-    res
+}
+
+#[cfg(not(feature = "std"))]
+pub fn batch_bucketed_add_parallel<C: AffineCurve>(
+    buckets: usize,
+    elems: &[C],
+    bucket_positions: &mut [BucketPosition],
+) -> Vec<C> {
+    batch_bucketed_add(buckets, elems, bucket_positions)
 }
 
 #[cfg(not(feature = "std"))]
@@ -261,9 +371,6 @@ pub fn batch_bucketed_add<C: AffineCurve>(
         }
     }
 
-    let zero = C::zero();
-    let mut res = vec![zero; buckets];
-
     for (i, to_add) in index.iter().enumerate() {
         if to_add.len() == 1 {
             res[i] = elems[to_add[0] as usize];
@@ -271,5 +378,4 @@ pub fn batch_bucketed_add<C: AffineCurve>(
             debug_assert!(false, "Did not successfully reduce to_add");
         }
     }
-    res
 }

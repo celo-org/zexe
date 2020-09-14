@@ -23,7 +23,7 @@ pub fn test_msm<G: AffineCurve>() {
     #[cfg(not(feature = "big_n"))]
     const MAX_LOGN: usize = 14;
     #[cfg(feature = "big_n")]
-    const MAX_LOGN: usize = 21;
+    const MAX_LOGN: usize = 23;
 
     const SAMPLES: usize = 1 << MAX_LOGN;
 
@@ -50,6 +50,18 @@ pub fn test_msm<G: AffineCurve>() {
     );
 
     let now = std::time::Instant::now();
+    let scaled = VariableBaseMSM::multi_scalar_mul_scaled(
+        g.as_slice(),
+        v.as_slice(),
+        <G::ScalarField as PrimeField>::size_in_bits(),
+    );
+    println!(
+        "scaled MSM for {} elems: {:?}",
+        SAMPLES,
+        now.elapsed().as_micros()
+    );
+
+    let now = std::time::Instant::now();
     let fast = VariableBaseMSM::multi_scalar_mul(g.as_slice(), v.as_slice());
     println!(
         "old MSM for {} elems: {:?}",
@@ -58,4 +70,5 @@ pub fn test_msm<G: AffineCurve>() {
     );
 
     assert_eq!(even_faster.into_affine(), fast.into_affine());
+    assert_eq!(even_faster.into_affine(), scaled.into_affine());
 }
