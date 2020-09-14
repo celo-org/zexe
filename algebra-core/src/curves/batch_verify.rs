@@ -98,25 +98,29 @@ fn run_rounds<C: AffineCurve, R: Rng>(
         use std::sync::Arc;
         // This may take up a lot of memory
         let ref_points = Arc::new(points.to_vec());
-        let mut threads = vec![];
-        for _ in 0..num_rounds {
-            let ref_points_thread = ref_points.clone();
-            // We only use std when a multicore environment is available
-            threads.push(std::thread::spawn(
-                move || -> Result<(), VerificationError> {
-                    let mut rng = &mut thread_rng();
-                    verify_points(
-                        &ref_points_thread[..],
-                        num_buckets,
-                        new_security_param,
-                        &mut rng,
-                    )?;
-                    Ok(())
-                },
-            ));
-        }
+        let mut threads = vec![Err(VerificationError); num_rounds];
+        let threads_ref = &mut threads[..];
+        rayon::scope(|s| {
+            for thread in threads_ref {
+                let ref_points_thread = ref_points.clone();
+                // We only use std when a multicore environment is available
+                s.spawn(move |_| {
+                    let f = || {
+                        let mut rng = &mut thread_rng();
+                        verify_points(
+                            &ref_points_thread[..],
+                            num_buckets,
+                            new_security_param,
+                            &mut rng,
+                        )?;
+                        Ok(())
+                    };
+                    *thread = f();
+                });
+            }
+        });
         for thread in threads {
-            thread.join().unwrap()?;
+            thread?;
         }
     } else {
         for _ in 0..num_rounds {
