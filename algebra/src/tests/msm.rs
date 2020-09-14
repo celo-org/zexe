@@ -1,12 +1,12 @@
-#![cfg(feature = "bls12_381")]
-use crate::bls12_381::{Fr, G1Projective};
 use algebra_core::{
     msm::VariableBaseMSM, AffineCurve, PrimeField, ProjectiveCurve, UniformRand, Zero,
 };
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
 
-fn naive_var_base_msm<G: AffineCurve>(
+use crate::tests::helpers::create_pseudo_uniform_random_elems;
+
+fn _naive_var_base_msm<G: AffineCurve>(
     bases: &[G],
     scalars: &[<G::ScalarField as PrimeField>::BigInt],
 ) -> G::Projective {
@@ -18,40 +18,57 @@ fn naive_var_base_msm<G: AffineCurve>(
     acc
 }
 
-#[test]
-fn test_with_bls12() {
-    const SAMPLES: usize = 1 << 10;
+#[allow(unused)]
+pub fn test_msm<G: AffineCurve>() {
+    #[cfg(not(feature = "big_n"))]
+    const MAX_LOGN: usize = 14;
+    #[cfg(feature = "big_n")]
+    const MAX_LOGN: usize = 23;
 
+    const SAMPLES: usize = 1 << MAX_LOGN;
+
+    let _lol = G::Projective::zero();
     let mut rng = XorShiftRng::seed_from_u64(234872845u64);
 
     let v = (0..SAMPLES)
-        .map(|_| Fr::rand(&mut rng).into_repr())
+        .map(|_| G::ScalarField::rand(&mut rng).into_repr())
         .collect::<Vec<_>>();
-    let g = (0..SAMPLES)
-        .map(|_| G1Projective::rand(&mut rng).into_affine())
-        .collect::<Vec<_>>();
+    let g = create_pseudo_uniform_random_elems::<G, XorShiftRng>(&mut rng, MAX_LOGN);
 
-    let naive = naive_var_base_msm(g.as_slice(), v.as_slice());
+    // let naive = naive_var_base_msm(g.as_slice(), v.as_slice());
+
+    let now = std::time::Instant::now();
+    let even_faster = VariableBaseMSM::multi_scalar_mul_batched(
+        g.as_slice(),
+        v.as_slice(),
+        <G::ScalarField as PrimeField>::size_in_bits(),
+    );
+    println!(
+        "new MSM for {} elems: {:?}",
+        SAMPLES,
+        now.elapsed().as_micros()
+    );
+
+    let now = std::time::Instant::now();
+    let scaled = VariableBaseMSM::multi_scalar_mul_scaled(
+        g.as_slice(),
+        v.as_slice(),
+        <G::ScalarField as PrimeField>::size_in_bits(),
+    );
+    println!(
+        "scaled MSM for {} elems: {:?}",
+        SAMPLES,
+        now.elapsed().as_micros()
+    );
+
+    let now = std::time::Instant::now();
     let fast = VariableBaseMSM::multi_scalar_mul(g.as_slice(), v.as_slice());
+    println!(
+        "old MSM for {} elems: {:?}",
+        SAMPLES,
+        now.elapsed().as_micros()
+    );
 
-    assert_eq!(naive.into_affine(), fast.into_affine());
-}
-
-#[test]
-fn test_with_bls12_unequal_numbers() {
-    const SAMPLES: usize = 1 << 10;
-
-    let mut rng = XorShiftRng::seed_from_u64(234872845u64);
-
-    let v = (0..SAMPLES - 1)
-        .map(|_| Fr::rand(&mut rng).into_repr())
-        .collect::<Vec<_>>();
-    let g = (0..SAMPLES)
-        .map(|_| G1Projective::rand(&mut rng).into_affine())
-        .collect::<Vec<_>>();
-
-    let naive = naive_var_base_msm(g.as_slice(), v.as_slice());
-    let fast = VariableBaseMSM::multi_scalar_mul(g.as_slice(), v.as_slice());
-
-    assert_eq!(naive.into_affine(), fast.into_affine());
+    assert_eq!(even_faster.into_affine(), fast.into_affine());
+    assert_eq!(even_faster.into_affine(), scaled.into_affine());
 }

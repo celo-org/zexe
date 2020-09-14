@@ -5,6 +5,12 @@ pub mod bn;
 pub mod bw6;
 pub mod mnt4;
 pub mod mnt6;
+
+#[macro_use]
+pub(crate) mod sw_batch_affine;
+#[macro_use]
+pub mod short_weierstrass_affine;
+#[macro_use]
 pub mod short_weierstrass_jacobian;
 pub mod short_weierstrass_projective;
 pub mod twisted_edwards_extended;
@@ -33,6 +39,26 @@ pub trait SWModelParameters: ModelParameters {
         let mut copy = *elem;
         copy += &Self::COEFF_B;
         copy
+    }
+
+    #[inline(always)]
+    fn has_glv() -> bool {
+        false
+    }
+
+    #[inline(always)]
+    fn glv_endomorphism_in_place(_elem: &mut Self::BaseField) {
+        unimplemented!()
+    }
+
+    #[inline(always)]
+    fn glv_scalar_decomposition(
+        _k: <Self::ScalarField as PrimeField>::BigInt,
+    ) -> (
+        (bool, <Self::ScalarField as PrimeField>::BigInt),
+        (bool, <Self::ScalarField as PrimeField>::BigInt),
+    ) {
+        unimplemented!()
     }
 }
 
