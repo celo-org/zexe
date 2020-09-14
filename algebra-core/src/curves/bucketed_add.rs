@@ -40,8 +40,6 @@ impl PartialEq for BucketPosition {
     }
 }
 
-const NUM_GROUPS: usize = 8;
-
 /// This does the same thing as batch_bucketed_add, but parallelises
 /// jobs over fixed number of threads.
 #[cfg(feature = "std")]
@@ -49,14 +47,19 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
     buckets_vec: &[usize],
     elems: &[C],
     bucket_positions_vec: &mut [Vec<BucketPosition>],
+    parallelism: usize,
 ) -> Vec<Vec<C>> {
     assert_eq!(buckets_vec.len(), bucket_positions_vec.len());
 
     let zero = C::zero();
-    let mut res: Vec<Vec<C>> = buckets_vec.iter().map(|&buckets| vec![zero; buckets]).collect();
+    let mut res: Vec<Vec<C>> = buckets_vec
+        .iter()
+        .map(|&buckets| vec![zero; buckets])
+        .collect();
 
     if cfg!(feature = "parallel") && elems.len() >= BATCH_SIZE * (1 << 4) {
-        let mut split_pointers_vec = buckets_vec.par_iter()
+        let mut split_pointers_vec = buckets_vec
+            .par_iter()
             .zip(bucket_positions_vec.par_iter_mut())
             .zip(res.par_iter_mut())
             .map(|((&buckets, bucket_positions_v), res_single)| {
@@ -69,7 +72,7 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
                 dlsd_radixsort(bucket_positions, 8);
                 timer_println!(_now, "radixsort");
 
-                let n_groups = NUM_GROUPS;
+                let n_groups = parallelism;
                 let group_size = ((buckets - 1) / n_groups + 1) as u32;
 
                 let mut pointer = 0;
@@ -81,7 +84,9 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
 
                 while pointer < bucket_positions.len() {
                     let current_bucket = bucket_positions[pointer].bucket;
-                    if current_bucket > (group_count + 1) * group_size && current_bucket < buckets as u32 {
+                    if current_bucket > (group_count + 1) * group_size
+                        && current_bucket < buckets as u32
+                    {
                         // Since group_size is > 0, current_bucket > 0
                         let buckets_consumed = (current_bucket - prev_bucket) as usize;
 
@@ -105,8 +110,8 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
                 // push remaining assignments
                 split_pointers.push((buckets_left, prev_bucket, bucket_positions, res_ref));
                 split_pointers
-            }
-        ).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
         let _now = timer!();
         rayon::scope(|s| {
             for split_pointers in split_pointers_vec.iter_mut() {
@@ -117,11 +122,18 @@ pub fn batch_bucketed_add_multiple<C: AffineCurve>(
         });
         timer_println!(_now, "bucket add multiple");
     } else {
-        for ((&buckets, bucket_positions), res_single) in buckets_vec.iter()
+        for ((&buckets, bucket_positions), res_single) in buckets_vec
+            .iter()
             .zip(bucket_positions_vec.iter_mut())
             .zip(res.iter_mut())
         {
-            batch_bucketed_add_inner(buckets, 0, elems, &mut bucket_positions[..], &mut res_single[..]);
+            batch_bucketed_add_inner(
+                buckets,
+                0,
+                elems,
+                &mut bucket_positions[..],
+                &mut res_single[..],
+            );
         }
     }
     res

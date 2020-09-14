@@ -217,7 +217,8 @@ impl VariableBaseMSM {
             n_buckets.push(1 << log2_n_bucket);
 
             let _now = timer!();
-            let mut bucket_positions_all: Vec<Vec<_>> = window_starts.par_iter()
+            let mut bucket_positions_all: Vec<Vec<_>> = window_starts
+                .par_iter()
                 .map(|w_start| {
                     let bucket_positions: Vec<_> = scalars
                         .par_iter()
@@ -238,8 +239,8 @@ impl VariableBaseMSM {
                         })
                         .collect();
                     bucket_positions
-                    }
-                ).collect();
+                })
+                .collect();
             timer_println!(_now, "scalars->buckets");
 
             let _now = timer!();
@@ -247,6 +248,7 @@ impl VariableBaseMSM {
                 &n_buckets[..],
                 &bases[..],
                 &mut bucket_positions_all[..],
+                PARALLELISM,
             );
             timer_println!(_now, "bucket add");
 
@@ -256,7 +258,8 @@ impl VariableBaseMSM {
                 .map(|bucket_v| {
                     let len = bucket_v.len();
                     let chunk_size = (len - 1) / PARALLELISM + 1;
-                    bucket_v.par_chunks(chunk_size)
+                    bucket_v
+                        .par_chunks(chunk_size)
                         .enumerate()
                         .map(|(i, buckets_full)| {
                             let first = buckets_full[0];
@@ -269,10 +272,12 @@ impl VariableBaseMSM {
                                 res += &running_sum;
                             }
                             running_sum.add_assign_mixed(&first);
-                            let factor = <G::ScalarField as PrimeField>::BigInt::from((i * chunk_size) as u64);
+                            let factor = <G::ScalarField as PrimeField>::BigInt::from(
+                                (i * chunk_size) as u64,
+                            );
                             res + &running_sum.mul(factor)
-                    })
-                    .sum()
+                        })
+                        .sum()
                 })
                 .collect();
             timer_println!(_now, "accumulating sums");

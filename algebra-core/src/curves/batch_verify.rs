@@ -210,10 +210,10 @@ fn batch_verify_in_subgroup_proj_recursive<C: ProjectiveCurve, R: Rng>(
         }
 
         if num_buckets <= MAX_BUCKETS_FOR_FULL_CHECK {
-            if !buckets
-                .iter()
-                .all(|b| b.mul(<C::ScalarField as PrimeField>::Params::MODULUS).is_zero())
-            {
+            if !buckets.iter().all(|b| {
+                b.mul(<C::ScalarField as PrimeField>::Params::MODULUS)
+                    .is_zero()
+            }) {
                 return Err(VerificationError);
             }
         } else {
@@ -248,9 +248,9 @@ fn get_max_bucket_recursive(
         }
         (
             2f64.powf(log2_num_buckets + log2_constant_multiplier)
-                .ceil() as usize,                                           // number of buckets
-            num_rounds(log2_num_buckets),                                   // number of rounds
-            log2_num_buckets + log2_constant_multiplier,                    // new security param
+                .ceil() as usize, // number of buckets
+            num_rounds(log2_num_buckets), // number of rounds
+            log2_num_buckets + log2_constant_multiplier, // new security param
         )
     }
 

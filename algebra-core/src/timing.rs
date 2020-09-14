@@ -27,9 +27,7 @@ macro_rules! timer_println {
             ];
 
             let whitelisted_functions: Vec<&'static str> =
-                vec![
-                "multi_scalar_mul_batched",
-                "multi_scalar_mul_scaled",];
+                vec!["multi_scalar_mul_batched", "multi_scalar_mul_scaled"];
 
             let blacklisted_parent_functions: Vec<&'static str> = vec![];
             let whitelisted_parent_functions: Vec<&'static str> = vec![];
