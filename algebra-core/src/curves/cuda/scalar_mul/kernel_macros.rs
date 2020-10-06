@@ -4,7 +4,7 @@ macro_rules! impl_scalar_mul_kernel {
         paste::item! {
             use accel::*;
 
-            #[cfg(feature = "gpu")]
+            #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
             #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
@@ -46,7 +46,7 @@ macro_rules! impl_scalar_mul_kernel {
                 }
             }
 
-            #[cfg(not(feature = "gpu"))]
+            #[cfg(not(feature = "cuda"))]
             fn scalar_mul(
                 _ctx: &Context,
                 _grid: impl Into<Grid>,
@@ -65,7 +65,7 @@ macro_rules! impl_scalar_mul_kernel_glv {
         paste::item! {
             use accel::*;
 
-            #[cfg(feature = "gpu")]
+            #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
             #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
@@ -116,7 +116,7 @@ macro_rules! impl_scalar_mul_kernel_glv {
                 }
             }
 
-            #[cfg(not(feature = "gpu"))]
+            #[cfg(not(feature = "cuda"))]
             fn scalar_mul(
                 _ctx: &Context,
                 _grid: impl Into<Grid>,
