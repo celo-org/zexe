@@ -1,5 +1,5 @@
 [package]
-name = "gpu"
+name = "gpu_standalone"
 version = "0.1.0"
 authors = ["jonch <9093549+jon-chuang@users.noreply.github.com>"]
 edition = "2018"
@@ -22,3 +22,4 @@ paste = "0.1"
 
 [features]
 parallel = []
+cuda = [ "algebra-core/cuda" ]

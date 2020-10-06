@@ -1,3 +1,4 @@
+#![allow(unused)]
 use accel::*;
 mod helpers;
 use crate::helpers::create_pseudo_uniform_random_elems;
@@ -5,7 +6,8 @@ use algebra::bw6_761::G1Projective;
 use algebra_core::{
     curves::ProjectiveCurve, fields::PrimeField, BatchGroupArithmeticSlice, UniformRand,
 };
-use gpu::bw6_761_g1_scalar_mul_kernel::*;
+#[cfg(feature = "cuda")]
+use gpu_standalone::bw6_761_g1_scalar_mul_kernel::*;
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
 use rayon::prelude::*;
@@ -20,6 +22,7 @@ const CUDA_GROUP_SIZE: usize = 1 << 5;
 pub type G1 = G1Projective;
 pub type BigInt = <<G1Projective as ProjectiveCurve>::ScalarField as PrimeField>::BigInt;
 
+#[cfg(feature = "cuda")]
 fn main() -> error::Result<()> {
     let mut rng = XorShiftRng::seed_from_u64(1231275789u64);
 
@@ -120,3 +123,6 @@ fn main() -> error::Result<()> {
     }
     Ok(())
 }
+
+#[cfg(not(feature = "cuda"))]
+fn main() {}

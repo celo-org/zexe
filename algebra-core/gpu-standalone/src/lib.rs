@@ -1,3 +1,5 @@
+#![cfg(feature = "cuda")]
+
 #[macro_use]
 mod cpu_gpu;
 
@@ -9,7 +11,7 @@ mod scalar_mul;
 // (This is very significant as we are compiling in sequence n different
 // cargo crates for the nvptx target for n different curve impls, with
 // very low thread util)
-
+#[cfg(feature = "cuda")]
 impl_scalar_mul_kernel_glv!(bw6_761, "bw6_761", g1, G1Projective);
 // impl_scalar_mul_kernel!(bls12_381, "bls12_381", g1, G1Projective);
 // impl_scalar_mul_kernel!(bls12_377, "bls12_377", g1, G1Projective);
