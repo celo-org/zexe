@@ -21,7 +21,7 @@ use accel::*;
 
 #[cfg(feature = "cuda")]
 use {
-    crate::curves::{cuda::scalar_mul::MICROBENCH_CPU_GPU_AVG_RATIO, BatchGroupArithmeticSlice},
+    crate::curves::BatchGroupArithmeticSlice,
     closure::closure,
     peekmore::PeekMore,
     std::sync::Mutex,
@@ -29,7 +29,7 @@ use {
 
 use crate::{
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::GPUScalarMul,
+    curves::cuda::scalar_mul::{GPUScalarMul,  ScalarMulProfiler},
     curves::{AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve},
     fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
 };
@@ -103,6 +103,8 @@ pub trait SWModelParameters: ModelParameters + Sized {
         out: *mut GroupProjective<Self>,
         n: isize,
     ) -> error::Result<()>;
+
+    fn scalar_mul_static_profiler() -> ScalarMulProfiler;
 }
 
 impl_gpu_sw_projective!(SWModelParameters);

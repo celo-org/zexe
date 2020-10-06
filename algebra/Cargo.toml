@@ -24,6 +24,7 @@ edition = "2018"
 [dependencies]
 algebra-core = { path = "../algebra-core", default-features = false }
 accel = { git = "https://github.com/jon-chuang/accel", package = "accel", optional = true }
+lazy_static = { version = "1.4.0", optional = true }
 # accel = { path = "/home/jonch/Desktop/Programming/Rust/accel/accel"}
 paste = "0.1"
 
@@ -96,7 +97,7 @@ derive = [ "algebra-core/derive" ]
 asm = [ "algebra-core/llvm_asm" ]
 bw6_asm = [ "algebra-core/bw6_asm" ]
 prefetch = [ "algebra-core/prefetch"]
-cuda = ["algebra-core/cuda", "accel", "std"]
+cuda = [ "algebra-core/cuda", "accel", "std", "lazy_static" ]
 timing = [ "algebra-core/timing"]
 timing_detailed = [ "algebra-core/timing_detailed" ]
 timing_thread_id = [ "algebra-core/timing_thread_id" ]

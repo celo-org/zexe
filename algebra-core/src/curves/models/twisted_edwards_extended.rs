@@ -23,7 +23,7 @@ use rand::{
 
 #[cfg(feature = "cuda")]
 use {
-    crate::curves::{cuda::scalar_mul::MICROBENCH_CPU_GPU_AVG_RATIO, BatchGroupArithmeticSlice},
+    crate::curves::BatchGroupArithmeticSlice,
     closure::closure,
     peekmore::PeekMore,
     std::sync::Mutex,
@@ -32,7 +32,7 @@ use {
 use crate::{
     biginteger::BigInteger,
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::GPUScalarMul,
+    curves::cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
     curves::{
         models::MontgomeryModelParameters, AffineCurve, BatchGroupArithmetic, ModelParameters,
         ProjectiveCurve,
@@ -72,6 +72,8 @@ pub trait TEModelParameters: ModelParameters + Sized {
         out: *mut GroupProjective<Self>,
         n: isize,
     ) -> error::Result<()>;
+
+    fn scalar_mul_static_profiler() -> ScalarMulProfiler;
 }
 
 #[derive(Derivative)]

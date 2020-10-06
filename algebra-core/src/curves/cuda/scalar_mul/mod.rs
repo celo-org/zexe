@@ -9,15 +9,11 @@ mod cpu_gpu_macros;
 #[macro_use]
 mod run_kernel_macros;
 
+#[cfg(feature = "cuda")]
+use {accel::*, std::sync::{Mutex, Arc}, lazy_static::lazy_static};
+
 #[cfg(not(feature = "cuda"))]
 use crate::accel_dummy::*;
-#[cfg(feature = "cuda")]
-use accel::*;
-
-use lazy_static::lazy_static;
-
-#[cfg(feature = "cuda")]
-use std::sync::Mutex;
 
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -30,13 +26,13 @@ use crate::{
     },
 };
 
+#[cfg(feature = "cuda")]
+pub type ScalarMulProfiler = Arc<Mutex<(Vec<f64>, usize)>>;
+#[cfg(not(feature = "cuda"))]
+pub type ScalarMulProfiler = ();
+
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-
-#[cfg(feature = "cuda")]
-lazy_static! {
-    pub static ref MICROBENCH_CPU_GPU_AVG_RATIO: Mutex<(Vec<f64>, usize)> = Mutex::new((vec![], 0));
-}
 
 // We will use average of the proportions of throughput (points/s)
 // Preferably, one could make this mangled and curve specific.

@@ -3,9 +3,21 @@ macro_rules! impl_scalar_mul_kernel {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
         paste::item! {
             #[cfg(feature = "cuda")]
-            use accel::*;
+            use {accel::*, std::sync::{Arc, Mutex}};
+
             #[cfg(not(feature = "cuda"))]
             use algebra_core::accel_dummy::*;
+
+            use algebra_core::curves::cuda::scalar_mul::ScalarMulProfiler;
+
+            #[cfg(feature = "cuda")]
+            lazy_static::lazy_static! {
+                pub static ref MICROBENCH_CPU_GPU_AVG_RATIO:
+                    Arc<Mutex<(Vec<f64>, usize)>> = Arc::new(Mutex::new((vec![], 0)));
+            }
+
+            #[cfg(not(feature = "cuda"))]
+            static MICROBENCH_CPU_GPU_AVG_RATIO: () = ();
 
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
@@ -67,9 +79,21 @@ macro_rules! impl_scalar_mul_kernel_glv {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
         paste::item! {
             #[cfg(feature = "cuda")]
-            use accel::*;
+            use {accel::*, std::sync::{Arc, Mutex}};
+
             #[cfg(not(feature = "cuda"))]
             use algebra_core::accel_dummy::*;
+
+            use algebra_core::curves::cuda::scalar_mul::ScalarMulProfiler;
+
+            #[cfg(feature = "cuda")]
+            lazy_static::lazy_static! {
+                pub static ref MICROBENCH_CPU_GPU_AVG_RATIO:
+                    Arc<Mutex<(Vec<f64>, usize)>> = Arc::new(Mutex::new((vec![], 0)));
+            }
+
+            #[cfg(not(feature = "cuda"))]
+            static MICROBENCH_CPU_GPU_AVG_RATIO: () = ();
 
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
@@ -131,6 +155,31 @@ macro_rules! impl_scalar_mul_kernel_glv {
             ) -> error::Result<()> {
                 unimplemented!("gpu kernels have not been compiled, this function should not have been called");
             }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! impl_scalar_mul_parameters {
+    ($ProjCurve:ident) => {
+        fn scalar_mul_kernel(
+            ctx: &Context,
+            grid: usize,
+            block: usize,
+            table: *const $ProjCurve,
+            exps: *const u8,
+            out: *mut $ProjCurve,
+            n: isize,
+        ) -> error::Result<()> {
+            scalar_mul(ctx, grid, block, (table, exps, out, n))
+        }
+
+        fn scalar_mul_static_profiler() -> ScalarMulProfiler {
+            #[cfg(feature = "cuda")]
+            return (*MICROBENCH_CPU_GPU_AVG_RATIO).clone();
+
+            #[cfg(not(feature = "cuda"))]
+            MICROBENCH_CPU_GPU_AVG_RATIO
         }
     }
 }

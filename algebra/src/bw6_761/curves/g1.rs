@@ -9,6 +9,7 @@ use crate::{
     field_new,
     fields::PrimeField,
     impl_scalar_mul_kernel_glv,
+    impl_scalar_mul_parameters,
 };
 
 pub type G1Affine = GroupAffine<Parameters>;
@@ -183,17 +184,7 @@ impl SWModelParameters for Parameters {
         <Self as GLVParameters>::glv_scalar_decomposition_inner(k)
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G1Projective,
-        exps: *const u8,
-        out: *mut G1Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G1Projective);
 }
 
 /// G1_GENERATOR_X =

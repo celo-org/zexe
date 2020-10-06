@@ -29,7 +29,8 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                 let now = std::time::Instant::now();
                 // Get data for proportion of total throughput achieved by each device
-                let mut profile_data = MICROBENCH_CPU_GPU_AVG_RATIO.lock().unwrap();
+                let arc_mutex = P::scalar_mul_static_profiler();
+                let mut profile_data = arc_mutex.lock().unwrap();
                 let mut proportions = profile_data.0.clone();
                 if proportions == vec![] {
                     // By default we split the work evenly between devices and host
