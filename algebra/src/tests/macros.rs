@@ -164,7 +164,7 @@ macro_rules! edwards_curve_tests {
         };
         use rand::Rng;
 
-        use crate::tests::{curves::*, groups::*, msm::*};
+        use crate::tests::{cuda::*, curves::*, groups::*, msm::*};
 
         #[test]
         #[cfg(feature = "curve")]
@@ -219,7 +219,7 @@ macro_rules! edwards_curve_tests {
 
         #[test]
         #[cfg(any(feature = "curve", feature = "cuda_test"))]
-        fn test_cuda_scalar_mul() {
+        fn test_edwards_cuda_scalar_mul() {
             test_cuda_scalar_mul::<EdwardsAffine>();
         }
 

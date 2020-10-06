@@ -19,8 +19,11 @@ macro_rules! impl_scalar_mul_kernel {
             #[cfg(not(feature = "cuda"))]
             static MICROBENCH_CPU_GPU_AVG_RATIO: () = ();
 
+            const NAMESPACE: &'static str = stringify!([<$curve _ $type _cuda_namespace>]);
+
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
+            #[name([<$curve _ $type _cuda_namespace>])]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
             #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
             #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra", default_features = false, features = [$curve_string]})]
@@ -99,6 +102,7 @@ macro_rules! impl_scalar_mul_kernel_glv {
 
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
+            #[name([<$curve _ $type _cuda_namespace>])]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
             #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
             #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra", default_features = false, features = [$curve_string]})]

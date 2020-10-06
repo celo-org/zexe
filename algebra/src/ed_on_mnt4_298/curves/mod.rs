@@ -28,6 +28,7 @@ impl ModelParameters for EdwardsParameters {
 // R for Fr: 104384076783966083500464392945960916666734135485183910065100558776489954102951241798239545
 
 impl_scalar_mul_kernel!(ed_on_mnt4_298, "ed_on_mnt4_298", proj, EdwardsProjective);
+
 impl TEModelParameters for EdwardsParameters {
     /// COEFF_A = -1
     /// Needs to be in the Montgomery residue form in Fq

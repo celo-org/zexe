@@ -103,17 +103,7 @@ impl TEModelParameters for EdwardsParameters {
         -(*elem)
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const EdwardsProjective,
-        exps: *const u8,
-        out: *mut EdwardsProjective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(EdwardsProjective);
 }
 
 impl MontgomeryModelParameters for EdwardsParameters {
