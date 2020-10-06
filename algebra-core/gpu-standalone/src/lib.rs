@@ -1,5 +1,3 @@
-#![cfg(feature = "cuda")]
-
 #[macro_use]
 mod cpu_gpu;
 
