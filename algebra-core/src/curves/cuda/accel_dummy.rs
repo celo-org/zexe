@@ -1,3 +1,5 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 pub mod error {
     pub type Result<T> = T;
 }

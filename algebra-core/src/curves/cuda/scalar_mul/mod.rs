@@ -15,7 +15,12 @@ use crate::accel_dummy::*;
 use accel::*;
 
 use lazy_static::lazy_static;
+
+#[cfg(feature = "cuda")]
 use std::sync::Mutex;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use crate::{
     cfg_chunks_mut,
@@ -28,6 +33,7 @@ use crate::{
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+#[cfg(feature = "cuda")]
 lazy_static! {
     pub static ref MICROBENCH_CPU_GPU_AVG_RATIO: Mutex<(Vec<f64>, usize)> = Mutex::new((vec![], 0));
 }

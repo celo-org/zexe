@@ -21,7 +21,7 @@ use rand::{
     Rng,
 };
 
-#[allow(unused_imports)]
+#[cfg(feature = "cuda")]
 use {
     crate::curves::{cuda::scalar_mul::MICROBENCH_CPU_GPU_AVG_RATIO, BatchGroupArithmeticSlice},
     closure::closure,
