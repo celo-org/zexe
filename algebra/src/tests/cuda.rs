@@ -19,6 +19,12 @@ pub fn test_cuda_scalar_mul<G: AffineCurve>() {
     #[cfg(feature = "big_n")]
     const MAX_LOGN: usize = 20;
 
+    let cuda_group_size = 1 << 5;
+    if core::mem::size_of::<G>() > 400 {
+        println!("Group size too large to run on GPU");
+        return;
+    }
+
     const SAMPLES: usize = 1 << MAX_LOGN;
 
     let _lol = G::Projective::zero();
@@ -41,13 +47,13 @@ pub fn test_cuda_scalar_mul<G: AffineCurve>() {
     <G as AffineCurve>::Projective::clear_gpu_profiling_data();
 
     let mut junk_data = bases_d.to_vec();
-    for _ in 0..10 {
+    for _ in 0..3 {
         let now = std::time::Instant::now();
-        &mut junk_data[..].cpu_gpu_scalar_mul(&exps_h[..], 1 << 5, CHUNK_SIZE);
+        &mut junk_data[..].cpu_gpu_scalar_mul(&exps_h[..], cuda_group_size, CHUNK_SIZE);
         println!("CPU + GPU mul: {}us", now.elapsed().as_micros());
     }
     let now = std::time::Instant::now();
-    &mut bases_d[..].cpu_gpu_scalar_mul(&exps_h[..], 1 << 5, CHUNK_SIZE);
+    &mut bases_d[..].cpu_gpu_scalar_mul(&exps_h[..], cuda_group_size, CHUNK_SIZE);
     println!("CPU + GPU mul: {}us", now.elapsed().as_micros());
 
     for (b_h, b_d) in bases_h.into_iter().zip(bases_d.into_iter()) {

@@ -1,4 +1,5 @@
 // TODO: make this more generic
+#[cfg(feature = "cuda")]
 #[macro_export]
 macro_rules! impl_gpu_cpu_run_kernel {
     ($KERNEL_NAME: ident) =>  {

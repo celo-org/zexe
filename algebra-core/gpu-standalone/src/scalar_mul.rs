@@ -1,3 +1,4 @@
+#[cfg(feature = "cuda")]
 macro_rules! impl_run_kernel {
     () => {
         // We drop a lock only after the parallel portion has been handled
@@ -87,6 +88,7 @@ macro_rules! impl_run_kernel {
     };
 }
 
+#[cfg(feature = "cuda")]
 #[macro_export]
 macro_rules! impl_scalar_mul_kernel {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
@@ -206,6 +208,7 @@ macro_rules! impl_scalar_mul_kernel {
     }
 }
 
+#[cfg(feature = "cuda")]
 #[macro_export]
 macro_rules! impl_scalar_mul_kernel_glv {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
