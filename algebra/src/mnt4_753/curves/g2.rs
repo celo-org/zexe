@@ -6,7 +6,7 @@ use algebra_core::{
         mnt4::MNT4Parameters,
         models::{ModelParameters, SWModelParameters},
     },
-    field_new, impl_scalar_mul_kernel,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
 };
 
 pub type G2Affine = mnt4::G2Affine<mnt4_753::Parameters>;
@@ -106,17 +106,7 @@ impl SWModelParameters for Parameters {
         field_new!(Fq2, MUL_BY_A_C0 * &elt.c0, MUL_BY_A_C1 * &elt.c1,)
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G2Projective,
-        exps: *const u8,
-        out: *mut G2Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G2Projective);
 }
 
 const G2_GENERATOR_X: Fq2 = field_new!(Fq2, G2_GENERATOR_X_C0, G2_GENERATOR_X_C1);

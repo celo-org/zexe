@@ -5,7 +5,7 @@ use algebra_core::{
         models::{ModelParameters, MontgomeryModelParameters, TEModelParameters},
         twisted_edwards_extended::{GroupAffine, GroupProjective},
     },
-    field_new, impl_scalar_mul_kernel,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
 };
 
 #[cfg(test)]

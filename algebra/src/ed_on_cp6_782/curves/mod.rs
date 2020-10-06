@@ -4,7 +4,7 @@ use crate::{
         models::{ModelParameters, MontgomeryModelParameters, TEModelParameters},
         twisted_edwards_extended::{GroupAffine, GroupProjective},
     },
-    field_new, impl_scalar_mul_kernel,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
 };
 
 use crate::ed_on_cp6_782::{fq::Fq, fr::Fr};
@@ -74,17 +74,7 @@ impl TEModelParameters for EdwardsParameters {
         -*elem
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const EdwardsProjective,
-        exps: *const u8,
-        out: *mut EdwardsProjective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(EdwardsProjective);
 }
 
 impl MontgomeryModelParameters for EdwardsParameters {

@@ -10,7 +10,11 @@ mod cpu_gpu_macros;
 mod run_kernel_macros;
 
 #[cfg(feature = "cuda")]
-use {accel::*, std::sync::{Mutex, Arc}, lazy_static::lazy_static};
+use {
+    accel::*,
+    lazy_static::lazy_static,
+    std::sync::{Arc, Mutex},
+};
 
 #[cfg(not(feature = "cuda"))]
 use crate::accel_dummy::*;
@@ -46,6 +50,8 @@ pub trait GPUScalarMul<G: AffineCurve>: Sized {
     }
 
     fn num_u8() -> usize;
+
+    fn clear_gpu_profiling_data();
 
     fn par_run_kernel(
         ctx: &Context,

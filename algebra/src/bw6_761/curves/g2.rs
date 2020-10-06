@@ -8,9 +8,7 @@ use crate::{
     },
     field_new,
     fields::PrimeField,
-    impl_scalar_mul_kernel_glv,
-    impl_scalar_mul_parameters,
-
+    impl_scalar_mul_kernel_glv, impl_scalar_mul_parameters,
 };
 
 pub type G2Affine = GroupAffine<Parameters>;

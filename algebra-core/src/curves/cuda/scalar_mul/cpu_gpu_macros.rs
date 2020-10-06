@@ -2,12 +2,25 @@
 #[macro_export]
 macro_rules! impl_gpu_cpu_run_kernel {
     () =>  {
-        // We split up the job statically between the CPU and GPUs
-        // based on continuous profiling stored in a static location in memory.
-        // This data is lost the moment the progam stops running.
+        fn clear_gpu_profiling_data() {
+            #[cfg(feature = "cuda")]
+            {
+                let dir = dirs::cache_dir()
+                    .unwrap()
+                    .join("zexe-algebra")
+                    .join("cuda-scalar-mul-profiler")
+                    .join(P::namespace());
+                std::fs::create_dir_all(&dir).expect("Could not create/get cache dir for profile data");
+                std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");
+            }
+        }
 
+        /// We split up the job statically between the CPU and GPUs
+        /// based on continuous profiling stored both in a static location in memory
+        /// that is lost the moment the progam stops running.
+        /// and also a txt file in the OS' cache dir.
 
-        // Only one such procedure should be running at any time.
+        /// Only one such procedure should be running at any time.
         #[allow(unused_variables)]
         fn cpu_gpu_static_partition_run_kernel(
             bases_h: &mut [<Self as ProjectiveCurve>::Affine],
@@ -29,13 +42,39 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                 let now = std::time::Instant::now();
                 // Get data for proportion of total throughput achieved by each device
+                let dir = dirs::cache_dir()
+                    .unwrap()
+                    .join("zexe-algebra")
+                    .join("cuda-scalar-mul-profiler")
+                    .join(P::namespace());
+                std::fs::create_dir_all(&dir).expect("Could not create/get cache dir for profile data");
+
                 let arc_mutex = P::scalar_mul_static_profiler();
                 let mut profile_data = arc_mutex.lock().unwrap();
-                let mut proportions = profile_data.0.clone();
-                if proportions == vec![] {
+                let mut proportions: Vec<f64> = profile_data.0.clone();
+
+                // If the program has just been initialised, we must check for the existence of existing
+                // cached profile data. If it does not exist, we create a new file
+                if proportions.is_empty() {
+                    match std::fs::read_to_string(&dir.join("profile_data.txt")) {
+                        Ok(s) => {
+                            match serde_json::from_str(&s) {
+                                Ok(cached_data) => {
+                                    *profile_data = cached_data;
+                                    proportions = profile_data.0.clone();
+                                },
+                                _ => (),
+                            };
+                        },
+                        _ => (),
+                    };
+                }
+
+                if proportions.is_empty() {
                     // By default we split the work evenly between devices and host
                     proportions = vec![1.0 / (n_devices as f64 + 1.0); n_devices];
                 }
+
                 assert_eq!(proportions.len(), n_devices);
                 // Allocate the number of elements in the job to each device/host
                 let n_gpus = proportions.iter().map(|r| (r * n as f64).round() as usize).collect::<Vec<_>>();
@@ -124,13 +163,22 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 profile_data.1 += 1;
                 let new_proportions = gpu_throughputs.iter().map(|t| t / total_throughput);
 
-                if profile_data.0 != vec![] {
+                if !profile_data.0.is_empty() {
                     profile_data.0 = new_proportions.zip(profile_data.0.clone()).map(|(new, old)| {
                         (new + n_data_points * old) / profile_data.1 as f64
                     }).collect();
                 } else {
                     profile_data.0 = new_proportions.collect();
                 }
+
+                let now = std::time::Instant::now();
+                println!("writing data");
+                let mut file = std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");
+                let s: String = serde_json::to_string(&(*profile_data)).expect("could not convert profiling data to string");
+                file.write_all(s.as_bytes()).expect("could not write profiling data to cache dir");
+                file.sync_all().expect("could not sync profiling data to disc");
+                println!("time taken to write data: {}us", now.elapsed().as_micros());
+
                 println!("new profile_data: {:?}", profile_data);
             }
         }

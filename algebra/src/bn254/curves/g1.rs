@@ -4,7 +4,7 @@ use algebra_core::{
         bn,
         models::{ModelParameters, SWModelParameters},
     },
-    field_new, impl_scalar_mul_kernel, Zero,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero,
 };
 
 use crate::bn254;
@@ -57,17 +57,7 @@ impl SWModelParameters for Parameters {
         Self::BaseField::zero()
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G1Projective,
-        exps: *const u8,
-        out: *mut G1Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G1Projective);
 }
 
 /// G1_GENERATOR_X =

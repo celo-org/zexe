@@ -23,9 +23,7 @@ use rand::{
 
 #[cfg(feature = "cuda")]
 use {
-    crate::curves::BatchGroupArithmeticSlice,
-    closure::closure,
-    peekmore::PeekMore,
+    crate::curves::BatchGroupArithmeticSlice, closure::closure, peekmore::PeekMore,
     std::sync::Mutex,
 };
 
@@ -74,6 +72,8 @@ pub trait TEModelParameters: ModelParameters + Sized {
     ) -> error::Result<()>;
 
     fn scalar_mul_static_profiler() -> ScalarMulProfiler;
+
+    fn namespace() -> &'static str;
 }
 
 #[derive(Derivative)]

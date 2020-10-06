@@ -5,7 +5,7 @@ use crate::{
         models::{ModelParameters, SWModelParameters},
         short_weierstrass_jacobian::{GroupAffine, GroupProjective},
     },
-    field_new, impl_scalar_mul_kernel,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
 };
 
 pub type G1Affine = GroupAffine<Parameters>;
@@ -87,17 +87,7 @@ impl SWModelParameters for Parameters {
     const AFFINE_GENERATOR_COEFFS: (Self::BaseField, Self::BaseField) =
         (G1_GENERATOR_X, G1_GENERATOR_Y);
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G1Projective,
-        exps: *const u8,
-        out: *mut G1Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G1Projective);
 }
 
 /// G1_GENERATOR_X =

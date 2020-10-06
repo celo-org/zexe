@@ -5,7 +5,7 @@ use algebra_core::{
         models::{ModelParameters, MontgomeryModelParameters, TEModelParameters},
         twisted_edwards_extended::{GroupAffine, GroupProjective},
     },
-    field_new, impl_scalar_mul_kernel,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
 };
 
 #[cfg(test)]
@@ -89,17 +89,7 @@ impl TEModelParameters for EdwardsParameters {
 
     type MontgomeryModelParameters = EdwardsParameters;
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const EdwardsProjective,
-        exps: *const u8,
-        out: *mut EdwardsProjective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(EdwardsProjective);
 }
 
 impl MontgomeryModelParameters for EdwardsParameters {

@@ -21,15 +21,13 @@ use accel::*;
 
 #[cfg(feature = "cuda")]
 use {
-    crate::curves::BatchGroupArithmeticSlice,
-    closure::closure,
-    peekmore::PeekMore,
+    crate::curves::BatchGroupArithmeticSlice, closure::closure, peekmore::PeekMore,
     std::sync::Mutex,
 };
 
 use crate::{
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::{GPUScalarMul,  ScalarMulProfiler},
+    curves::cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
     curves::{AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve},
     fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
 };
@@ -105,6 +103,8 @@ pub trait SWModelParameters: ModelParameters + Sized {
     ) -> error::Result<()>;
 
     fn scalar_mul_static_profiler() -> ScalarMulProfiler;
+
+    fn namespace() -> &'static str;
 }
 
 impl_gpu_sw_projective!(SWModelParameters);

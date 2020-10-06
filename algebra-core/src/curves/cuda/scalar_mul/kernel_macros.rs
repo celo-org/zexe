@@ -95,6 +95,8 @@ macro_rules! impl_scalar_mul_kernel_glv {
             #[cfg(not(feature = "cuda"))]
             static MICROBENCH_CPU_GPU_AVG_RATIO: () = ();
 
+            const NAMESPACE: &'static str = stringify!([<$curve _ $type _cuda_namespace>]);
+
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
@@ -181,5 +183,9 @@ macro_rules! impl_scalar_mul_parameters {
             #[cfg(not(feature = "cuda"))]
             MICROBENCH_CPU_GPU_AVG_RATIO
         }
-    }
+
+        fn namespace() -> &'static str {
+            NAMESPACE
+        }
+    };
 }

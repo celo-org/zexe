@@ -6,7 +6,7 @@ use crate::{
         bls12,
         models::{ModelParameters, SWModelParameters},
     },
-    field_new, impl_scalar_mul_kernel, Zero,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero,
 };
 
 pub type G2Affine = bls12::G2Affine<bls12_381::Parameters>;
@@ -63,17 +63,7 @@ impl SWModelParameters for Parameters {
         Self::BaseField::zero()
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G2Projective,
-        exps: *const u8,
-        out: *mut G2Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G2Projective);
 }
 
 pub const G2_GENERATOR_X: Fq2 = field_new!(Fq2, G2_GENERATOR_X_C0, G2_GENERATOR_X_C1);

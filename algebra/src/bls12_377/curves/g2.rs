@@ -4,7 +4,7 @@ use algebra_core::{
         bls12,
         models::{ModelParameters, SWModelParameters},
     },
-    field_new, impl_scalar_mul_kernel, Zero,
+    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero,
 };
 
 use crate::bls12_377;
@@ -83,17 +83,7 @@ impl SWModelParameters for Parameters {
         Self::BaseField::zero()
     }
 
-    fn scalar_mul_kernel(
-        ctx: &Context,
-        grid: usize,
-        block: usize,
-        table: *const G2Projective,
-        exps: *const u8,
-        out: *mut G2Projective,
-        n: isize,
-    ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))
-    }
+    impl_scalar_mul_parameters!(G2Projective);
 }
 
 #[rustfmt::skip]
