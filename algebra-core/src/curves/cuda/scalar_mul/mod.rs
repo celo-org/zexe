@@ -38,6 +38,8 @@ pub type ScalarMulProfiler = ();
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+pub const MAX_GROUP_ELEM_BYTES: usize = 400;
+
 // We will use average of the proportions of throughput (points/s)
 // Preferably, one could make this mangled and curve specific.
 #[allow(unused_variables)]
@@ -210,7 +212,7 @@ macro_rules! impl_gpu_te_projective {
                         k.divn(Self::LOG2_W as u32);
                     }
                     assert!(k.is_zero());
-                    out
+            400        out
                 };
                 cfg_iter!(exps_h)
                     .zip(cfg_chunks_mut!(exps_recode_h, Self::num_u8()))
@@ -259,7 +261,8 @@ impl<G: AffineCurve> GPUScalarMulSlice<G> for [G] {
     ) {
         #[cfg(feature = "cuda")]
         {
-            if accel::Device::init() {
+            // CUDA will return ILLEGAL_ADRESS if group elem size is too large.
+            if accel::Device::init() && core::mem::size_of::<G>() < MAX_GROUP_ELEM_BYTES {
                 <G as AffineCurve>::Projective::cpu_gpu_static_partition_run_kernel(
                     self,
                     exps_h,

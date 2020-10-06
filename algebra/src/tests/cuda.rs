@@ -1,5 +1,5 @@
 use algebra_core::{
-    cuda::scalar_mul::{GPUScalarMul, GPUScalarMulSlice},
+    cuda::scalar_mul::{GPUScalarMul, GPUScalarMulSlice, MAX_GROUP_ELEM_BYTES},
     AffineCurve, BatchGroupArithmeticSlice, PrimeField, UniformRand, Zero,
 };
 use rand::SeedableRng;
@@ -20,9 +20,8 @@ pub fn test_cuda_scalar_mul<G: AffineCurve>() {
     const MAX_LOGN: usize = 20;
 
     let cuda_group_size = 1 << 5;
-    if core::mem::size_of::<G>() > 400 {
-        println!("Group size too large to run on GPU");
-        return;
+    if core::mem::size_of::<G>() >= MAX_GROUP_ELEM_BYTES {
+        println!("Group size too large to run on GPU, defaulting to CPU-only implementation");
     }
 
     const SAMPLES: usize = 1 << MAX_LOGN;
