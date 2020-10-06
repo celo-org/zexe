@@ -1,4 +1,5 @@
 #![allow(unused)]
+#[cfg(feature = "cuda")]
 use accel::*;
 use algebra::bw6_761::G1Projective;
 use algebra_core::{
