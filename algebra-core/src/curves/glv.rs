@@ -1,7 +1,10 @@
 use crate::{biginteger::BigInteger, ModelParameters, PrimeField};
 use core::ops::Neg;
 
-/// TODO: deal with the case where b1 and b2 have the same sign
+/// The GLV parameters here require the following conditions to be satisfied:
+/// 1. MODULUS_BITS < NUM_LIMBS * 64 - 1. So 2 * n < 1 << (64 * NUM_LIMBS)
+/// We also assume that |b1| * |b2| < 2 * n
+/// We also know that either B1 is neg or B2 is.
 pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
     type WideBigInt: BigInteger;
 
@@ -12,7 +15,7 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
     const B1: <Self::ScalarField as PrimeField>::BigInt; // |b1|
     const B2: <Self::ScalarField as PrimeField>::BigInt; // |b2|
     const B1_IS_NEG: bool;
-    const B2_IS_NEG: bool;
+
     const R_BITS: u32;
 
     #[inline]
@@ -57,27 +60,22 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
 
         // We check if they have the same sign. If they do, we must do a subtraction. Else, we must do an
         // addition. Then, we will conditionally add or subtract the product of this with lambda from k.
-        let mut k2 = if Self::B1_IS_NEG {
-            d2.clone()
+        // We do this to obtain the result k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2 - d1)
+        let mut k2_field = if Self::B1_IS_NEG {
+            Self::ScalarField::from(d2)
         } else {
-            d1.clone()
+            Self::ScalarField::from(d1)
         };
-        let borrow = if Self::B1_IS_NEG {
-            k2.sub_noborrow(&d1)
+        if Self::B1_IS_NEG {
+            k2_field -= &Self::ScalarField::from(d1);
         } else {
-            k2.sub_noborrow(&d2)
-        };
-        if borrow {
-            while k2 >= modulus {
-                k2.add_nocarry(&modulus);
-            }
-        } else {
-            while k2 >= modulus {
-                k2.sub_noborrow(&modulus);
-            }
+            k2_field -= &Self::ScalarField::from(d2);
         }
-        let k2_field = Self::ScalarField::from(k2);
+
         let k1 = (Self::ScalarField::from(k) - &(k2_field * &Self::LAMBDA)).into_repr();
+
+        let k2 = k2_field.into_repr();
+
         let (neg2, k2) = if k2.num_bits() > Self::R_BITS / 2 + 1 {
             (true, k2_field.neg().into_repr())
         } else {

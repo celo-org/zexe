@@ -1,5 +1,5 @@
 use crate::{
-    biginteger::{BigInteger384, BigInteger768},
+    biginteger::{BigInteger384, BigInteger768}, //, BigInteger1536},
     bw6_761::{Fq, Fr},
     curves::{
         models::{ModelParameters, SWModelParameters},
@@ -104,7 +104,6 @@ impl GLVParameters for Parameters {
         0,
         0,
     ]);
-    const B2_IS_NEG: bool = false;
     const R_BITS: u32 = 384;
 }
 

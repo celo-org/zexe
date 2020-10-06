@@ -17,7 +17,7 @@ use rand::{
 
 use crate::{
     bytes::{FromBytes, ToBytes},
-    curves::{AffineCurve, ProjectiveCurve},
+    curves::{AffineCurve, BatchGroupArithmetic, ProjectiveCurve},
     fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
 };
 
@@ -267,6 +267,26 @@ impl<P: Parameters> ProjectiveCurve for GroupProjective<P> {
             self.y = u * &(r - &a) - &(vvv * &self.y);
             // Z3 = vvv*Z1
             self.z = vvv * &self.z;
+        }
+    }
+
+    fn mul<S: Into<<Self::ScalarField as PrimeField>::BigInt>>(mut self, other: S) -> Self {
+        if P::has_glv() {
+            let w = P::glv_window_size();
+            let mut res = Self::zero();
+            impl_glv_mul!(Self, P, w, self, res, other);
+            res
+        } else {
+            let mut res = Self::zero();
+            for b in BitIteratorBE::without_leading_zeros(other.into()) {
+                res.double_in_place();
+                if b {
+                    res += self;
+                }
+            }
+
+            self = res;
+            self
         }
     }
 }

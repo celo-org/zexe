@@ -2,7 +2,7 @@ use crate::{
     curves::batch_arith::decode_endo_from_u32,
     io::{Read, Result as IoResult, Write},
     serialize::{EdwardsFlags, Flags},
-    CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
+    BatchGroupArithmetic, CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, ConstantSerializedSize, UniformRand, Vec,
 };
 use accel::*;

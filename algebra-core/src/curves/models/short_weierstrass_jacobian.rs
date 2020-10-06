@@ -58,6 +58,11 @@ pub trait SWModelParameters: ModelParameters + Sized {
     }
 
     #[inline(always)]
+    fn glv_window_size() -> usize {
+        4
+    }
+
+    #[inline(always)]
     fn add_b(elem: &Self::BaseField) -> Self::BaseField {
         let mut copy = *elem;
         copy += &Self::COEFF_B;
@@ -442,23 +447,15 @@ impl<P: SWModelParameters> ProjectiveCurve for GroupProjective<P> {
 
     fn mul<S: Into<<Self::ScalarField as PrimeField>::BigInt>>(mut self, other: S) -> Self {
         if P::has_glv() {
-            let w = 4;
+            let w = P::glv_window_size();
             let mut res = Self::zero();
             impl_glv_mul!(Self, P, w, self, res, other);
             res
         } else {
             let mut res = Self::zero();
-
-            let mut found_one = false;
-
-            for i in crate::fields::BitIteratorBE::new(other.into()) {
-                if found_one {
-                    res.double_in_place();
-                } else {
-                    found_one = i;
-                }
-
-                if i {
+            for b in BitIteratorBE::without_leading_zeros(other.into()) {
+                res.double_in_place();
+                if b {
                     res += self;
                 }
             }
