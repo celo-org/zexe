@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 #[macro_use]
 mod kernel_macros;
 pub use kernel_macros::*;
@@ -8,7 +9,11 @@ mod cpu_gpu_macros;
 #[macro_use]
 mod run_kernel_macros;
 
+#[cfg(not(feature = "cuda"))]
+use crate::accel_dummy::*;
+#[cfg(feature = "cuda")]
 use accel::*;
+
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 
@@ -29,6 +34,7 @@ lazy_static! {
 
 // We will use average of the proportions of throughput (points/s)
 // Preferably, one could make this mangled and curve specific.
+#[allow(unused_variables)]
 pub trait GPUScalarMul<G: AffineCurve>: Sized {
     const NUM_BITS: usize;
     const LOG2_W: usize;
@@ -209,7 +215,8 @@ macro_rules! impl_gpu_te_projective {
                         for i in 1..Self::table_size() {
                             table[i] = table[i - 1] + base;
                         }
-                    });
+                    }
+                );
             }
 
             fn num_u8() -> usize {
@@ -223,6 +230,7 @@ macro_rules! impl_gpu_te_projective {
 }
 
 pub trait GPUScalarMulSlice<G: AffineCurve> {
+    #[allow(unused_variables)]
     fn cpu_gpu_scalar_mul(
         &mut self,
         exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
@@ -233,6 +241,7 @@ pub trait GPUScalarMulSlice<G: AffineCurve> {
 }
 
 impl<G: AffineCurve> GPUScalarMulSlice<G> for [G] {
+    #[allow(unused_variables)]
     fn cpu_gpu_scalar_mul(
         &mut self,
         exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
@@ -240,14 +249,27 @@ impl<G: AffineCurve> GPUScalarMulSlice<G> for [G] {
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
     ) {
-        if accel::Device::init() && cfg!(feature = "gpu") {
-            <G as AffineCurve>::Projective::cpu_gpu_static_partition_run_kernel(
-                self,
-                exps_h,
-                cuda_group_size,
-                cpu_chunk_size,
-            );
-        } else {
+        #[cfg(feature = "cuda")]
+        {
+            if accel::Device::init() {
+                <G as AffineCurve>::Projective::cpu_gpu_static_partition_run_kernel(
+                    self,
+                    exps_h,
+                    cuda_group_size,
+                    cpu_chunk_size,
+                );
+            } else {
+                let mut exps_mut = exps_h.to_vec();
+                cfg_chunks_mut!(self, cpu_chunk_size)
+                    .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))
+                    .for_each(|(b, s)| {
+                        b[..].batch_scalar_mul_in_place(&mut s[..], 4);
+                    });
+            }
+        }
+
+        #[cfg(not(feature = "cuda"))]
+        {
             let mut exps_mut = exps_h.to_vec();
             cfg_chunks_mut!(self, cpu_chunk_size)
                 .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))

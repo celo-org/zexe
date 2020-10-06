@@ -14,18 +14,23 @@ use rand::{
     Rng,
 };
 
+#[cfg(not(feature = "cuda"))]
+use crate::accel_dummy::*;
+#[cfg(feature = "cuda")]
 use accel::*;
-use closure::closure;
-use peekmore::PeekMore;
-use std::sync::Mutex;
+
+#[allow(unused_imports)]
+use {
+    crate::curves::{cuda::scalar_mul::MICROBENCH_CPU_GPU_AVG_RATIO, BatchGroupArithmeticSlice},
+    closure::closure,
+    peekmore::PeekMore,
+    std::sync::Mutex,
+};
 
 use crate::{
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::{GPUScalarMul, MICROBENCH_CPU_GPU_AVG_RATIO},
-    curves::{
-        AffineCurve, BatchGroupArithmetic, BatchGroupArithmeticSlice, ModelParameters,
-        ProjectiveCurve,
-    },
+    curves::cuda::scalar_mul::GPUScalarMul,
+    curves::{AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve},
     fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
 };
 use crate::{
@@ -91,8 +96,8 @@ pub trait SWModelParameters: ModelParameters + Sized {
 
     fn scalar_mul_kernel(
         ctx: &Context,
-        grid: impl Into<Grid>,
-        block: impl Into<Block>,
+        grid: usize,
+        block: usize,
         table: *const GroupProjective<Self>,
         exps: *const u8,
         out: *mut GroupProjective<Self>,

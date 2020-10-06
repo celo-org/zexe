@@ -185,15 +185,14 @@ impl SWModelParameters for Parameters {
 
     fn scalar_mul_kernel(
         ctx: &Context,
-        grid: impl Into<Grid>,
-        block: impl Into<Block>,
+        grid: usize,
+        block: usize,
         table: *const G1Projective,
         exps: *const u8,
         out: *mut G1Projective,
         n: isize,
     ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))?;
-        Ok(())
+        scalar_mul(ctx, grid, block, (table, exps, out, n))
     }
 }
 

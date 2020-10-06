@@ -105,15 +105,14 @@ impl TEModelParameters for EdwardsParameters {
 
     fn scalar_mul_kernel(
         ctx: &Context,
-        grid: impl Into<Grid>,
-        block: impl Into<Block>,
+        grid: usize,
+        block: usize,
         table: *const EdwardsProjective,
         exps: *const u8,
         out: *mut EdwardsProjective,
         n: isize,
     ) -> error::Result<()> {
-        scalar_mul(ctx, grid, block, (table, exps, out, n))?;
-        Ok(())
+        scalar_mul(ctx, grid, block, (table, exps, out, n))
     }
 }
 

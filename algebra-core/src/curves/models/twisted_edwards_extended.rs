@@ -1,3 +1,5 @@
+#[cfg(not(feature = "cuda"))]
+use crate::accel_dummy::*;
 use crate::{
     curves::batch_arith::decode_endo_from_u32,
     io::{Read, Result as IoResult, Write},
@@ -5,28 +7,35 @@ use crate::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, ConstantSerializedSize, UniformRand, Vec,
 };
+#[cfg(feature = "cuda")]
 use accel::*;
-use closure::closure;
+
 use core::{
     fmt::{Display, Formatter, Result as FmtResult},
     marker::PhantomData,
     ops::{Add, AddAssign, MulAssign, Neg, Sub, SubAssign},
 };
 use num_traits::{One, Zero};
-use peekmore::PeekMore;
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-use std::sync::Mutex;
+
+#[allow(unused_imports)]
+use {
+    crate::curves::{cuda::scalar_mul::MICROBENCH_CPU_GPU_AVG_RATIO, BatchGroupArithmeticSlice},
+    closure::closure,
+    peekmore::PeekMore,
+    std::sync::Mutex,
+};
 
 use crate::{
     biginteger::BigInteger,
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::{GPUScalarMul, MICROBENCH_CPU_GPU_AVG_RATIO},
+    curves::cuda::scalar_mul::GPUScalarMul,
     curves::{
-        models::MontgomeryModelParameters, AffineCurve, BatchGroupArithmetic,
-        BatchGroupArithmeticSlice, ModelParameters, ProjectiveCurve,
+        models::MontgomeryModelParameters, AffineCurve, BatchGroupArithmetic, ModelParameters,
+        ProjectiveCurve,
     },
     fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
 };
@@ -56,8 +65,8 @@ pub trait TEModelParameters: ModelParameters + Sized {
 
     fn scalar_mul_kernel(
         ctx: &Context,
-        grid: impl Into<Grid>,
-        block: impl Into<Block>,
+        grid: usize,
+        block: usize,
         table: *const GroupProjective<Self>,
         exps: *const u8,
         out: *mut GroupProjective<Self>,

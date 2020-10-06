@@ -2,7 +2,10 @@
 macro_rules! impl_scalar_mul_kernel {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
         paste::item! {
+            #[cfg(feature = "cuda")]
             use accel::*;
+            #[cfg(not(feature = "cuda"))]
+            use algebra_core::accel_dummy::*;
 
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
@@ -49,8 +52,8 @@ macro_rules! impl_scalar_mul_kernel {
             #[cfg(not(feature = "cuda"))]
             fn scalar_mul(
                 _ctx: &Context,
-                _grid: impl Into<Grid>,
-                _block: impl Into<Block>,
+                _grid: usize,
+                _block: usize,
                 _: (*const $ProjCurve, *const u8, *mut $ProjCurve, isize),
             ) -> error::Result<()> {
                 unimplemented!("gpu kernels have not been compiled, this function should not have been called");
@@ -63,7 +66,10 @@ macro_rules! impl_scalar_mul_kernel {
 macro_rules! impl_scalar_mul_kernel_glv {
     ($curve: ident, $curve_string:expr, $type: expr, $ProjCurve: ident) => {
         paste::item! {
+            #[cfg(feature = "cuda")]
             use accel::*;
+            #[cfg(not(feature = "cuda"))]
+            use algebra_core::accel_dummy::*;
 
             #[cfg(feature = "cuda")]
             #[kernel_mod(transparent)]
@@ -119,8 +125,8 @@ macro_rules! impl_scalar_mul_kernel_glv {
             #[cfg(not(feature = "cuda"))]
             fn scalar_mul(
                 _ctx: &Context,
-                _grid: impl Into<Grid>,
-                _block: impl Into<Block>,
+                _grid: usize,
+                _block: usize,
                 _: (*const $ProjCurve, *const u8, *mut $ProjCurve, isize),
             ) -> error::Result<()> {
                 unimplemented!("gpu kernels have not been compiled, this function should not have been called");
