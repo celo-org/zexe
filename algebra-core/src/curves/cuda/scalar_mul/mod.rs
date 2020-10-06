@@ -212,7 +212,7 @@ macro_rules! impl_gpu_te_projective {
                         k.divn(Self::LOG2_W as u32);
                     }
                     assert!(k.is_zero());
-            400        out
+                    out
                 };
                 cfg_iter!(exps_h)
                     .zip(cfg_chunks_mut!(exps_recode_h, Self::num_u8()))
