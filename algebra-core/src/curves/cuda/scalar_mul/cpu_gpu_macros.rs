@@ -56,18 +56,14 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 // If the program has just been initialised, we must check for the existence of existing
                 // cached profile data. If it does not exist, we create a new file
                 if proportions.is_empty() {
-                    match std::fs::read_to_string(&dir.join("profile_data.txt")) {
-                        Ok(s) => {
-                            match serde_json::from_str(&s) {
-                                Ok(cached_data) => {
-                                    *profile_data = cached_data;
-                                    proportions = profile_data.0.clone();
-                                },
-                                _ => (),
-                            };
-                        },
-                        _ => (),
-                    };
+                    let _ = std::fs::read_to_string(&dir.join("profile_data.txt"))
+                        .and_then(|s| { let res = serde_json::from_str(&s)?; Ok(res) })
+                        .and_then(|cached_data| {
+                            *profile_data = cached_data;
+                            proportions = profile_data.0.clone();
+                            Ok(())
+                        }
+                    );
                 }
 
                 if proportions.is_empty() {
@@ -135,6 +131,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                         });
                     }
 
+                    // Run on CPU
                     s.spawn(|_| {
                         let now = std::time::Instant::now();
                         let exps_mut = &mut exps_h_ref.to_vec()[..];
@@ -171,6 +168,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     profile_data.0 = new_proportions.collect();
                 }
 
+                // Update cached profiling data on disk
                 let now = std::time::Instant::now();
                 println!("writing data");
                 let mut file = std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");

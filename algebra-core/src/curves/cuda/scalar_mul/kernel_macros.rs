@@ -63,16 +63,6 @@ macro_rules! impl_scalar_mul_kernel {
                     }
                 }
             }
-
-            #[cfg(not(feature = "cuda"))]
-            fn scalar_mul(
-                _ctx: &Context,
-                _grid: usize,
-                _block: usize,
-                _: (*const $ProjCurve, *const u8, *mut $ProjCurve, isize),
-            ) -> error::Result<()> {
-                unimplemented!("gpu kernels have not been compiled, this function should not have been called");
-            }
         }
     }
 }
@@ -151,16 +141,6 @@ macro_rules! impl_scalar_mul_kernel_glv {
                     }
                 }
             }
-
-            #[cfg(not(feature = "cuda"))]
-            fn scalar_mul(
-                _ctx: &Context,
-                _grid: usize,
-                _block: usize,
-                _: (*const $ProjCurve, *const u8, *mut $ProjCurve, isize),
-            ) -> error::Result<()> {
-                unimplemented!("gpu kernels have not been compiled, this function should not have been called");
-            }
         }
     }
 }
@@ -168,6 +148,7 @@ macro_rules! impl_scalar_mul_kernel_glv {
 #[macro_export]
 macro_rules! impl_scalar_mul_parameters {
     ($ProjCurve:ident) => {
+        #[allow(unused_variables)]
         fn scalar_mul_kernel(
             ctx: &Context,
             grid: usize,
@@ -177,6 +158,7 @@ macro_rules! impl_scalar_mul_parameters {
             out: *mut $ProjCurve,
             n: isize,
         ) -> error::Result<()> {
+            #[cfg(feature = "cuda")]
             scalar_mul(ctx, grid, block, (table, exps, out, n))
         }
 
