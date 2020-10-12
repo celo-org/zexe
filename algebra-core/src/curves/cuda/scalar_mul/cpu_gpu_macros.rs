@@ -67,8 +67,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 }
 
                 if proportions.is_empty() {
-                    // By defaualar-mul-profiler")
-                    .join(P::namesplt we split the work evenly between devices and host
+                    // By default we split the work evenly between devices and host
                     proportions = vec![1.0 / (n_devices as f64 + 1.0); n_devices];
                 }
                 timer_println!(_now, "prepare profiling");
