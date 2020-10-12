@@ -38,8 +38,6 @@ use rayon::prelude::*;
 
 pub const MAX_GROUP_ELEM_BYTES: usize = 400;
 
-// We will use average of the proportions of throughput (points/s)
-// Preferably, one could make this mangled and curve specific.
 #[allow(unused_variables)]
 pub trait GPUScalarMul<G: AffineCurve>: Sized {
     const NUM_BITS: usize;

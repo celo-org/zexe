@@ -18,7 +18,7 @@ macro_rules! impl_run_kernel {
                 let mut tables_h = vec![Self::zero(); n * Self::table_size()];
                 let mut exps_recode_h = vec![0u8; n * Self::num_u8()];
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 Self::generate_tables_and_recoding(
                     bases_h,
                     &mut tables_h[..],
@@ -26,23 +26,20 @@ macro_rules! impl_run_kernel {
                     &mut exps_recode_h[..],
                 );
                 drop(lock);
-                println!(
-                    "Generated tables and recoding: {}us",
-                    now.elapsed().as_micros()
-                );
+                timer_println!(_now, "generated tables & recode");
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 let mut out = DeviceMemory::<Self>::zeros(&ctx, n);
                 let mut tables = DeviceMemory::<Self>::zeros(&ctx, n * Self::table_size());
                 let mut exps = DeviceMemory::<u8>::zeros(&ctx, n * Self::num_u8());
-                println!("Allocated device memory: {}us", now.elapsed().as_micros());
+                timer_println!(_now, "allocate device memory");
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 tables.copy_from_slice(&tables_h);
                 exps.copy_from_slice(&exps_recode_h);
-                println!("Copied data to device: {}us", now.elapsed().as_micros());
+                timer_println!(_now, "copy data to device");
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 P::scalar_mul_kernel(
                     &ctx,
                     n / cuda_group_size, // grid
@@ -53,8 +50,7 @@ macro_rules! impl_run_kernel {
                     n as isize,
                 )
                 .expect("Kernel call failed");
-
-                println!("Ran kernel: {}us", now.elapsed().as_micros());
+                timer_println!(_now, "run kernel");
                 out
             }
             // This needs to become a real impl in future
@@ -74,18 +70,17 @@ macro_rules! impl_run_kernel {
                 assert_eq!(bases_h.len(), exps_h.len());
                 let n = bases_h.len();
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 let mut tables = DeviceMemory::<Self>::zeros(&ctx, n * Self::table_size());
                 let mut exps = DeviceMemory::<u8>::zeros(&ctx, n * Self::num_u8());
                 let mut out = DeviceMemory::<Self>::zeros(&ctx, n);
-                println!("Allocated device memory: {}us", now.elapsed().as_micros());
+                timer_println!(_now, "allocate device memory");
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 Self::generate_tables_and_recoding(bases_h, &mut tables[..], exps_h, &mut exps[..]);
-                println!(
-                    "Generated tables and recoding: {}us",
-                    now.elapsed().as_micros()
-                );
+                timer_println!(_now, "generated tables & recode");
+
+                let _now = timer!();
                 P::scalar_mul_kernel(
                     &ctx,
                     n / cuda_group_size, // grid
@@ -96,6 +91,7 @@ macro_rules! impl_run_kernel {
                     n as isize,
                 )
                 .expect("Kernel call failed");
+                timer_println!(_now, "run kernel");
                 out
             }
             // This needs to become a real impl in future

@@ -40,7 +40,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 let mut res_ref = &mut bases_h[..];
                 let mut exps_h_ref = exps_h;
 
-                let now = std::time::Instant::now();
+                let _now = timer!();
                 // Get data for proportion of total throughput achieved by each device
                 let dir = dirs::cache_dir()
                     .unwrap()
@@ -67,10 +67,13 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 }
 
                 if proportions.is_empty() {
-                    // By default we split the work evenly between devices and host
+                    // By defaualar-mul-profiler")
+                    .join(P::namesplt we split the work evenly between devices and host
                     proportions = vec![1.0 / (n_devices as f64 + 1.0); n_devices];
                 }
+                timer_println!(_now, "prepare profiling");
 
+                let _now = timer!();
                 assert_eq!(proportions.len(), n_devices);
                 // Allocate the number of elements in the job to each device/host
                 let n_gpus = proportions.iter().map(|r| (r * n as f64).round() as usize).collect::<Vec<_>>();
@@ -103,8 +106,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     tables.push(table);
                     exps.push(exp);
                 };
-
-                println!("Split statically and allocated device: {}us", now.elapsed().as_micros());
+                timer_println!(_now, "precomp and allocate on device");
 
                 rayon::scope(|s| {
                     // Run jobs on GPUs
@@ -116,6 +118,8 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                         s.spawn(move |_| {
                             let now = std::time::Instant::now();
+                            let _now = timer!();
+
                             let mut out = DeviceMemory::<Self>::zeros(ctx, n_gpu);
                             P::scalar_mul_kernel(
                                 ctx,
@@ -127,26 +131,30 @@ macro_rules! impl_gpu_cpu_run_kernel {
                             Self::batch_normalization(&mut out[..]);
                             bases_gpu.clone_from_slice(&out.par_iter().map(|p| p.into_affine()).collect::<Vec<_>>()[..]);
                             *time_gpu = now.elapsed().as_micros();
-                            println!("GPU {} finish", i);
+
+                            timer_println!(_now, format!("gpu {} done", i));
                         });
                     }
 
                     // Run on CPU
                     s.spawn(|_| {
                         let now = std::time::Instant::now();
+                        let _now = timer!();
+
                         let exps_mut = &mut exps_h_ref.to_vec()[..];
                         rayon::scope(|t| {
                             for (b, s) in res_ref.chunks_mut(cpu_chunk_size).zip(exps_mut.chunks_mut(cpu_chunk_size)) {
                                 t.spawn(move |_| b[..].batch_scalar_mul_in_place(&mut s[..], 4));
                             }
                         });
+
                         time_cpu = now.elapsed().as_micros();
-                        println!("CPU finish");
+                        timer_println!(_now, "cpu done");
                     });
                 });
 
                 // Update global microbenchmarking state
-                println!("old profile_data: {:?}", profile_data);
+                debug!("old profile_data: {:?}", profile_data);
                 let cpu_throughput = n_cpu as f64 / time_cpu as f64;
                 let gpu_throughputs = n_gpus
                     .iter()
@@ -169,15 +177,14 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 }
 
                 // Update cached profiling data on disk
-                let now = std::time::Instant::now();
-                println!("writing data");
+                let _now = timer!();
                 let mut file = std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");
                 let s: String = serde_json::to_string(&(*profile_data)).expect("could not convert profiling data to string");
                 file.write_all(s.as_bytes()).expect("could not write profiling data to cache dir");
                 file.sync_all().expect("could not sync profiling data to disc");
-                println!("time taken to write data: {}us", now.elapsed().as_micros());
+                timer_println!("write data");
 
-                println!("new profile_data: {:?}", profile_data);
+                debug!("new profile_data: {:?}", profile_data);
             }
         }
 
@@ -217,7 +224,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     s.spawn(|_| {
                         std::thread::sleep(std::time::Duration::from_millis(20));
                         let mut iter = queue.lock().unwrap();
-                        println!("acquired cpu");
+                        debug!("acquired cpu");
                         while let Some((bases, exps)) = iter.next() {
                             let exps_mut = &mut exps.to_vec()[..];
                             rayon::scope(|t| {
@@ -227,12 +234,12 @@ macro_rules! impl_gpu_cpu_run_kernel {
                             });
                             // Sleep to allow other threads to unlock
                             drop(iter);
-                            println!("unlocked cpu");
+                            debug!("unlocked cpu");
                             std::thread::sleep(std::time::Duration::from_millis(20));
                             iter = queue.lock().unwrap();
-                            println!("acquired cpu");
+                            debug!("acquired cpu");
                         }
-                        println!("CPU FINISH");
+                        debug!("CPU FINISH");
                     });
                 });
                 drop(queue);
