@@ -24,10 +24,8 @@ use alloc::vec::Vec;
 
 use crate::{
     cfg_chunks_mut,
-    {
-        curves::{AffineCurve, BatchGroupArithmeticSlice},
-        fields::PrimeField,
-    },
+    curves::{AffineCurve, BatchGroupArithmeticSlice},
+    fields::PrimeField,
 };
 
 #[cfg(feature = "cuda")]

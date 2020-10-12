@@ -1,5 +1,5 @@
 use crate::{
-    biginteger::{BigInteger384, BigInteger768}, //, BigInteger1536},
+    biginteger::{BigInteger384, BigInteger768},
     bw6_761::{Fq, Fr},
     curves::{
         models::{ModelParameters, SWModelParameters},
@@ -8,8 +8,7 @@ use crate::{
     },
     field_new,
     fields::PrimeField,
-    impl_scalar_mul_kernel_glv,
-    impl_scalar_mul_parameters,
+    impl_scalar_mul_kernel_glv, impl_scalar_mul_parameters,
 };
 
 pub type G1Affine = GroupAffine<Parameters>;

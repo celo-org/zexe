@@ -27,13 +27,13 @@ use {
 
 use crate::{
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
-    curves::{AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve},
-    fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
-};
-use crate::{
-    cfg_chunks_mut, cfg_iter, fields::FpParameters, impl_gpu_cpu_run_kernel,
-    impl_gpu_sw_projective, impl_run_kernel,
+    cfg_chunks_mut, cfg_iter,
+    curves::{
+        cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
+        AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve,
+    },
+    fields::{BitIteratorBE, Field, FpParameters, PrimeField, SquareRootField},
+    impl_gpu_cpu_run_kernel, impl_gpu_sw_projective, impl_run_kernel,
 };
 
 use crate::{

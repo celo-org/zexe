@@ -30,16 +30,14 @@ use {
 use crate::{
     biginteger::BigInteger,
     bytes::{FromBytes, ToBytes},
-    curves::cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
+    cfg_chunks_mut, cfg_iter,
     curves::{
-        models::MontgomeryModelParameters, AffineCurve, BatchGroupArithmetic, ModelParameters,
-        ProjectiveCurve,
+        cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
+        models::MontgomeryModelParameters,
+        AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve,
     },
-    fields::{BitIteratorBE, Field, PrimeField, SquareRootField},
-};
-use crate::{
-    cfg_chunks_mut, cfg_iter, fields::FpParameters, impl_gpu_cpu_run_kernel,
-    impl_gpu_te_projective, impl_run_kernel,
+    fields::{BitIteratorBE, Field, FpParameters, PrimeField, SquareRootField},
+    impl_gpu_cpu_run_kernel, impl_gpu_te_projective, impl_run_kernel,
 };
 
 #[cfg(feature = "parallel")]
@@ -112,8 +110,8 @@ impl<P: TEModelParameters> GroupAffine<P> {
         self.mul_bits(BitIteratorBE::new(P::COFACTOR))
     }
 
-    /// Multiplies `self` by the scalar represented by `bits`. `bits` must be a big-endian
-    /// bit-wise decomposition of the scalar.
+    /// Multiplies `self` by the scalar represented by `bits`. `bits` must be a
+    /// big-endian bit-wise decomposition of the scalar.
     pub(crate) fn mul_bits(&self, bits: impl Iterator<Item = bool>) -> GroupProjective<P> {
         let mut res = GroupProjective::zero();
         for i in bits.skip_while(|b| !b) {

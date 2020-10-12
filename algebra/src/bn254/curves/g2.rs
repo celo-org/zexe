@@ -7,8 +7,7 @@ use algebra_core::{
     field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero,
 };
 
-use crate::bn254;
-use crate::bn254::*;
+use crate::{bn254, bn254::*};
 
 pub type G2Affine = bn::G2Affine<bn254::Parameters>;
 pub type G2Projective = bn::G2Projective<bn254::Parameters>;
@@ -50,7 +49,8 @@ impl SWModelParameters for Parameters {
     );
 
     /// COFACTOR = (36 * X^4) + (36 * X^3) + (30 * X^2) + 6*X + 1
-    ///          = 21888242871839275222246405745257275088844257914179612981679871602714643921549
+    ///          =
+    /// 21888242871839275222246405745257275088844257914179612981679871602714643921549
     #[rustfmt::skip]
     const COFACTOR: &'static [u64] = &[
         0x345f2299c0f9fa8d,

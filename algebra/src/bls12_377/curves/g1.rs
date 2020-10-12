@@ -7,8 +7,7 @@ use algebra_core::{
     field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero,
 };
 
-use crate::bls12_377;
-use crate::bls12_377::*;
+use crate::{bls12_377, bls12_377::*};
 
 pub type G1Affine = bls12::G1Affine<bls12_377::Parameters>;
 pub type G1Projective = bls12::G1Projective<bls12_377::Parameters>;
