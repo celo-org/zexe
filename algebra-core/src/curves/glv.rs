@@ -56,26 +56,29 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
         // is not set, so that 2 * n < R = 1 << (64 * NUM_LIMBS). Then, since we
         // know that |b_i| < \sqrt{2n}, wlog k|b1|/n * |b2| < 2 * k <  2 * n <
         // R.
-        let d1 =
+        let mut d1 =
             <Self::ScalarField as PrimeField>::BigInt::mul_no_reduce_lo(&c1, Self::B1.as_ref());
-        let d2 =
+        let mut d2 =
             <Self::ScalarField as PrimeField>::BigInt::mul_no_reduce_lo(&c2, Self::B2.as_ref());
+
+        let (d1d2_diff, d1_larger) = if d1 > d2 {
+            d1.sub_noborrow(&d2);
+            (Self::ScalarField::from_repr(d1).unwrap(), true)
+        } else {
+            d2.sub_noborrow(&d1);
+            (Self::ScalarField::from_repr(d2).unwrap(), false)
+        };
 
         // We check if they have the same sign. If they do, we must do a subtraction.
         // Else, we must do an addition. Then, we will conditionally add or
         // subtract the product of this with lambda from k. We do this to obtain
         // the result k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2
         // - d1)
-        let mut k2_field = if Self::B1_IS_NEG {
-            Self::ScalarField::from(d2)
+        let k2_field = if Self::B1_IS_NEG == d1_larger {
+            d1d2_diff
         } else {
-            Self::ScalarField::from(d1)
+            -d1d2_diff
         };
-        if Self::B1_IS_NEG {
-            k2_field -= &Self::ScalarField::from(d1);
-        } else {
-            k2_field -= &Self::ScalarField::from(d2);
-        }
 
         let k1 = (Self::ScalarField::from(k) - &(k2_field * &Self::LAMBDA)).into_repr();
 
