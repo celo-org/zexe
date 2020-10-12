@@ -56,12 +56,11 @@ pub trait CanonicalSerialize {
 
     fn serialized_size(&self) -> usize;
 
-    /// Serializes `self` into `writer` without compression, and without
+    /// Serializes `self` into `writer` with compression, and without
     /// performing validity checks. Should be used *only* when there is no
     /// danger of adversarial manipulation of the output.
     #[inline]
     fn serialize_unchecked<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
-        // TODO make this just serialize
         self.serialize(writer)
     }
 
