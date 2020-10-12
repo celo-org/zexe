@@ -53,6 +53,10 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
         c2_wide.divn(Self::R_BITS);
         let c2 = &c2_wide.as_ref()[..limbs];
 
+        // We first assume that the final 2 bits of the representation for the modulus
+        // is not set, so that 2 * n < R = 1 << (64 * NUM_LIMBS). Then, since we
+        // know that |b_i| < \sqrt{2n}, wlog k|b1|/n * |b2| < 2 * k <  2 * n <
+        // R.
         let d1 =
             <Self::ScalarField as PrimeField>::BigInt::mul_no_reduce_lo(&c1, Self::B1.as_ref());
         let d2 =
