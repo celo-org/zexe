@@ -89,7 +89,7 @@ cargo +nightly bench --features "n_fold bls12_381"
 
 CUDA support is available for a limited set of functions. To allow compilation for CUDA on Linux, first run the script
 ```
-curl -sSL https://gitlab.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
+curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
 ```
 or run the equivalent commands for your OS. Then, pass the `cuda` feature to rustc or cargo when compiling, and import the relevant traits (e.g. GPUScalarMulSlice) wherever the functions are called.
 
