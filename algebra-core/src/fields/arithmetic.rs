@@ -1,3 +1,5 @@
+/// All of these methods store intermediate results on the stack, and so
+/// they support overlap of input and output parameters.
 #[cfg(feature = "bw6_asm")]
 extern "C" {
     pub fn modmul768(x: *const u64, y: *const u64, m: *const u64, z: *mut u64);
