@@ -66,12 +66,8 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
         if d2 > modulus {
             d2.sub_noborrow(&modulus);
         }
-        // We check if they have the same sign. If they do, we must do a subtraction.
-        // Else, we must do an addition. Then, we will conditionally add or
-        // subtract the product of this with lambda from k. We do this to obtain
-        // the result k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2
-        // - d1)
-        let k2_field = if Self::B1_IS_NEG {
+        // We compute k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2 - d1)
+        let k2_field = if !Self::B1_IS_NEG {
             Self::ScalarField::from(d2) - &Self::ScalarField::from(d1)
         } else {
             Self::ScalarField::from(d1) - &Self::ScalarField::from(d2)
