@@ -62,14 +62,15 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
             <Self::ScalarField as PrimeField>::BigInt::mul_no_reduce_lo(&c2, Self::B2.as_ref());
         
         if d1 > modulus { 
-            d1 -= modulus; 
+            d1.sub_noborrow(&modulus); 
         }
         if d2 > modulus { 
-            d2 -= modulus; 
+            d2.sub_noborrow(&modulus); 
         }
-
-        // We compute k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2 - d1)
-        let k2_field = if Self::B1_IS_NEG {
+        
+        // Since 
+        // We compute k_2 = -(c1.b1 + c2.b2) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2 - d1)
+        let k2_field = if !Self::B1_IS_NEG {
             Self::ScalarField::from(d2) - &Self::ScalarField::from(d1)
         } else {
             Self::ScalarField::from(d1) - &Self::ScalarField::from(d2)
