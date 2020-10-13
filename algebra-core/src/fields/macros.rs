@@ -211,13 +211,13 @@ macro_rules! impl_Fp {
             }
 
             #[inline]
-            fn from_repr_unchecked(r: $BigIntegerType) -> Option<Self> {
+            fn from_repr_unchecked(r: $BigIntegerType) -> Self {
                 let mut r = $Fp(r, PhantomData);
                 if r.is_zero() {
-                    Some(r)
+                    r
                 } else {
                     r *= &$Fp(P::R2, PhantomData);
-                    Some(r)
+                    r
                 }
             }
 

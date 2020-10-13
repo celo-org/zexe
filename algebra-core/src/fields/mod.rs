@@ -319,7 +319,7 @@ pub trait PrimeField:
 
     /// Returns a prime field element from its underlying representation,
     /// without verifying it's smaller than the modulus.
-    fn from_repr_unchecked(repr: Self::BigInt) -> Option<Self>;
+    fn from_repr_unchecked(repr: Self::BigInt) -> Self;
 
     /// Returns the underlying representation of the prime field element.
     fn into_repr(&self) -> Self::BigInt;
