@@ -210,17 +210,6 @@ macro_rules! impl_Fp {
                 }
             }
 
-            #[inline]
-            fn from_repr_unchecked(r: $BigIntegerType) -> Self {
-                let mut r = $Fp(r, PhantomData);
-                if r.is_zero() {
-                    r
-                } else {
-                    r *= &$Fp(P::R2, PhantomData);
-                    r
-                }
-            }
-
             impl_field_into_repr!($limbs, $BigIntegerType);
         }
 
