@@ -8,6 +8,7 @@ use crate::{
     },
     field_new,
     fields::PrimeField,
+    impl_glv_for_sw,
 };
 
 pub type G2Affine = GroupAffine<Parameters>;
@@ -153,25 +154,7 @@ impl SWModelParameters for Parameters {
         Self::BaseField::zero()
     }
 
-    #[inline(always)]
-    fn has_glv() -> bool {
-        true
-    }
-
-    #[inline(always)]
-    fn glv_endomorphism_in_place(elem: &mut Self::BaseField) {
-        *elem *= &<Self as GLVParameters>::OMEGA;
-    }
-
-    #[inline]
-    fn glv_scalar_decomposition(
-        k: <Self::ScalarField as PrimeField>::BigInt,
-    ) -> (
-        (bool, <Self::ScalarField as PrimeField>::BigInt),
-        (bool, <Self::ScalarField as PrimeField>::BigInt),
-    ) {
-        <Self as GLVParameters>::glv_scalar_decomposition_inner(k)
-    }
+    impl_glv_for_sw!();
 }
 
 /// G2_GENERATOR_X =

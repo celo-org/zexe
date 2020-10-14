@@ -66,7 +66,8 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
         if d2 > modulus {
             d2.sub_noborrow(&modulus);
         }
-        // We compute k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2 - d1)
+        // We compute k_2 = -(c1.b1 + c1.b1) = sign(b1)*(c2|b2| - c1|b1|) = sign(b1)(d2
+        // - d1)
         let k2_field = if !Self::B1_IS_NEG {
             Self::ScalarField::from(d2) - &Self::ScalarField::from(d1)
         } else {
@@ -90,4 +91,29 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
 
         ((neg1, k1), (neg2, k2))
     }
+}
+
+#[macro_export]
+macro_rules! impl_glv_for_sw {
+    () => {
+        #[inline(always)]
+        fn has_glv() -> bool {
+            true
+        }
+
+        #[inline(always)]
+        fn glv_endomorphism_in_place(elem: &mut Self::BaseField) {
+            *elem *= &<Self as GLVParameters>::OMEGA;
+        }
+
+        #[inline]
+        fn glv_scalar_decomposition(
+            k: <Self::ScalarField as PrimeField>::BigInt,
+        ) -> (
+            (bool, <Self::ScalarField as PrimeField>::BigInt),
+            (bool, <Self::ScalarField as PrimeField>::BigInt),
+        ) {
+            <Self as GLVParameters>::glv_scalar_decomposition_inner(k)
+        }
+    };
 }
