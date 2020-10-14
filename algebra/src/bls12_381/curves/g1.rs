@@ -44,14 +44,14 @@ impl GLVParameters for Parameters {
         ])
     );
     /// |round(B1 * R / n)|
-    const Q2: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([0, 0, 0, 0]);
-    const B1: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([0, 0, 0, 0]);
+    const Q2: <Self::ScalarField as PrimeField>::BigInt =
+        BigInteger256([7203196592358157870, 8965520006802549469, 1, 0]);
+    const B1: <Self::ScalarField as PrimeField>::BigInt =
+        BigInteger256([4294967295, 12413508272118670338, 0, 0]);
     const B1_IS_NEG: bool = true;
     /// |round(B2 * R / n)|
-    const Q1: <Self::ScalarField as PrimeField>::BigInt =
-        BigInteger256([7203196592358157870, 8965520006802549469, 1, 0]);
-    const B2: <Self::ScalarField as PrimeField>::BigInt =
-        BigInteger256([4294967295, 12413508272118670338, 0, 0]);
+    const Q1: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([2, 0, 0, 0]);
+    const B2: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([1, 0, 0, 0]);
     const R_BITS: u32 = 256;
 }
 impl SWModelParameters for Parameters {

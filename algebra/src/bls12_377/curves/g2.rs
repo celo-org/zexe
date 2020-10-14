@@ -43,14 +43,14 @@ impl GLVParameters for Parameters {
         ])
     );
     /// |round(B1 * R / n)|
-    const Q2: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([0, 0, 0, 0]);
-    const B1: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([0, 0, 0, 0]);
-    const B1_IS_NEG: bool = true;
-    /// |round(B2 * R / n)|
-    const Q1: <Self::ScalarField as PrimeField>::BigInt =
+    const Q2: <Self::ScalarField as PrimeField>::BigInt =
         BigInteger256([9183663392111466540, 12968021215939883360, 3, 0]);
-    const B2: <Self::ScalarField as PrimeField>::BigInt =
+    const B1: <Self::ScalarField as PrimeField>::BigInt =
         BigInteger256([725501752471715841, 4981570305181876225, 0, 0]);
+    const B1_IS_NEG: bool = false;
+    /// |round(B2 * R / n)|
+    const Q1: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([13, 0, 0, 0]);
+    const B2: <Self::ScalarField as PrimeField>::BigInt = BigInteger256([1, 0, 0, 0]);
     const R_BITS: u32 = 256;
 }
 

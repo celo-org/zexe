@@ -1,8 +1,8 @@
 extern crate algebra;
 extern crate algebra_core;
 
-use algebra::bn254::G2Projective as GroupProjective;
-use algebra_core::{BigInteger512 as FrWideBigInt, BigInteger512 as BaseFieldBigInt};
+use algebra::bls12_381::G1Projective as GroupProjective;
+use algebra_core::{BigInteger384 as BaseFieldBigInt, BigInteger512 as FrWideBigInt};
 use glv_lattice_basis::*;
 
 fn main() {
