@@ -8,7 +8,7 @@ use crate::{
     CanonicalSerializeWithFlags, ConstantSerializedSize, UniformRand, Vec,
 };
 #[cfg(feature = "cuda")]
-use accel::*;
+use {accel::*, log::debug};
 
 use core::{
     fmt::{Display, Formatter, Result as FmtResult},
@@ -32,7 +32,7 @@ use crate::{
     bytes::{FromBytes, ToBytes},
     cfg_chunks_mut, cfg_iter,
     curves::{
-        cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
+        cuda::scalar_mul::{internal::GPUScalarMulInternal, ScalarMulProfiler},
         models::MontgomeryModelParameters,
         AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve,
     },

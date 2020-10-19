@@ -40,6 +40,7 @@ closure = { version = "0.3.0", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 serde_json = { version = "1.0.58", optional = true }
 dirs = { version = "1.0.5", optional = true }
+log = { version = "0.4.11", optional = true }
 paste = "0.1"
 
 [build-dependencies]
@@ -57,7 +58,7 @@ std = [ "voracious_radix_sort" ]
 parallel = [ "std", "rayon", "rand/default" ]
 derive = [ "algebra-core-derive" ]
 prefetch = [ "std" ]
-cuda = [ "std", "parallel", "accel", "lazy_static", "serde_json", "dirs", "closure" ]
+cuda = [ "std", "parallel", "accel", "lazy_static", "serde_json", "dirs", "closure", "log" ]
 
 timing = [ "std", "backtrace" ]
 timing_detailed = [ "std", "backtrace" ]

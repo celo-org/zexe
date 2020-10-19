@@ -21,7 +21,7 @@ use accel::*;
 
 #[cfg(feature = "cuda")]
 use {
-    crate::curves::BatchGroupArithmeticSlice, closure::closure, peekmore::PeekMore,
+    crate::curves::BatchGroupArithmeticSlice, closure::closure, log::debug, peekmore::PeekMore,
     std::sync::Mutex,
 };
 
@@ -29,7 +29,7 @@ use crate::{
     bytes::{FromBytes, ToBytes},
     cfg_chunks_mut, cfg_iter,
     curves::{
-        cuda::scalar_mul::{GPUScalarMul, ScalarMulProfiler},
+        cuda::scalar_mul::{internal::GPUScalarMulInternal, ScalarMulProfiler},
         AffineCurve, BatchGroupArithmetic, ModelParameters, ProjectiveCurve,
     },
     fields::{BitIteratorBE, Field, FpParameters, PrimeField, SquareRootField},

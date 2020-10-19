@@ -1,4 +1,3 @@
-#![allow(unused_imports)]
 #[macro_use]
 mod kernel_macros;
 pub use kernel_macros::*;
@@ -10,23 +9,14 @@ mod cpu_gpu_macros;
 mod run_kernel_macros;
 
 #[cfg(feature = "cuda")]
-use {
-    accel::*,
-    lazy_static::lazy_static,
-    std::sync::{Arc, Mutex},
-};
-
-#[cfg(not(feature = "cuda"))]
-use crate::accel_dummy::*;
-
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use std::sync::{Arc, Mutex};
 
 use crate::{
     cfg_chunks_mut,
     curves::{AffineCurve, BatchGroupArithmeticSlice},
     fields::PrimeField,
 };
+use internal::GPUScalarMulInternal;
 
 #[cfg(feature = "cuda")]
 pub type ScalarMulProfiler = Arc<Mutex<(Vec<f64>, usize)>>;
@@ -38,65 +28,125 @@ use rayon::prelude::*;
 
 pub const MAX_GROUP_ELEM_BYTES: usize = 400;
 
-#[allow(unused_variables)]
-pub trait GPUScalarMul<G: AffineCurve>: Sized {
-    const NUM_BITS: usize;
-    const LOG2_W: usize;
-
-    fn table_size() -> usize {
-        1 << Self::LOG2_W
+pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
+    fn clear_gpu_profiling_data() {
+        <Self as internal::GPUScalarMulInternal<G>>::clear_gpu_profiling_data();
     }
 
-    fn num_u8() -> usize;
-
-    fn clear_gpu_profiling_data();
-
-    fn par_run_kernel(
-        ctx: &Context,
-        bases_h: &[G],
-        exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
-        cuda_group_size: usize,
-    ) -> DeviceMemory<Self>;
-
-    fn par_run_kernel_sync<T>(
-        ctx: &Context,
-        bases_h: &[G],
-        exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
-        cuda_group_size: usize,
-        lock: T,
-    ) -> DeviceMemory<Self>;
-
-    fn generate_tables_and_recoding(
-        bases_h: &[G],
-        tables_h: &mut [Self],
-        exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
-        exps_recode_h: &mut [u8],
-    );
-
-    fn cpu_gpu_load_balance_run_kernel(
-        ctx: &Context,
-        bases_h: &[G],
-        exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
-        cuda_group_size: usize,
-        // size of a single job in the queue e.g. 2 << 14
-        job_size: usize,
-        // size of the batch for cpu scalar mul
-        cpu_chunk_size: usize,
-    ) -> Vec<G>;
-
-    fn cpu_gpu_static_partition_run_kernel(
-        bases_h: &mut [G],
+    #[allow(unused_variables)]
+    fn cpu_gpu_scalar_mul(
+        elems: &mut [G],
         exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
         cuda_group_size: usize,
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
-    );
+    ) {
+        #[cfg(feature = "cuda")]
+        {
+            // CUDA will return ILLEGAL_ADRESS if group elem size is too large.
+            if accel::Device::init() && core::mem::size_of::<G>() < MAX_GROUP_ELEM_BYTES {
+                <G as AffineCurve>::Projective::cpu_gpu_static_partition_run_kernel(
+                    elems,
+                    exps_h,
+                    cuda_group_size,
+                    cpu_chunk_size,
+                );
+            } else {
+                let mut exps_mut = exps_h.to_vec();
+                cfg_chunks_mut!(elems, cpu_chunk_size)
+                    .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))
+                    .for_each(|(b, s)| {
+                        b[..].batch_scalar_mul_in_place(&mut s[..], 4);
+                    });
+            }
+        }
+
+        #[cfg(not(feature = "cuda"))]
+        {
+            let mut exps_mut = exps_h.to_vec();
+            cfg_chunks_mut!(elems, cpu_chunk_size)
+                .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))
+                .for_each(|(b, s)| {
+                    b[..].batch_scalar_mul_in_place(&mut s[..], 4);
+                });
+        }
+    }
+}
+
+impl<G: AffineCurve> GPUScalarMul<G> for G::Projective {}
+
+pub(crate) mod internal {
+    #[cfg(feature = "cuda")]
+    use accel::*;
+
+    #[cfg(not(feature = "cuda"))]
+    use crate::accel_dummy::*;
+
+    #[cfg(not(feature = "std"))]
+    use alloc::vec::Vec;
+
+    use crate::{curves::AffineCurve, fields::PrimeField};
+
+    #[allow(unused_variables)]
+    pub trait GPUScalarMulInternal<G: AffineCurve>: Sized {
+        const NUM_BITS: usize;
+        const LOG2_W: usize;
+
+        fn table_size() -> usize {
+            1 << Self::LOG2_W
+        }
+
+        fn num_u8() -> usize;
+
+        fn clear_gpu_profiling_data();
+
+        fn par_run_kernel(
+            ctx: &Context,
+            bases_h: &[G],
+            exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
+            cuda_group_size: usize,
+        ) -> DeviceMemory<Self>;
+
+        fn par_run_kernel_sync<T>(
+            ctx: &Context,
+            bases_h: &[G],
+            exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
+            cuda_group_size: usize,
+            lock: T,
+        ) -> DeviceMemory<Self>;
+
+        fn generate_tables_and_recoding(
+            bases_h: &[G],
+            tables_h: &mut [Self],
+            exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
+            exps_recode_h: &mut [u8],
+        );
+
+        fn cpu_gpu_load_balance_run_kernel(
+            ctx: &Context,
+            bases_h: &[G],
+            exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
+            cuda_group_size: usize,
+            // size of a single job in the queue e.g. 2 << 14
+            job_size: usize,
+            // size of the batch for cpu scalar mul
+            cpu_chunk_size: usize,
+        ) -> Vec<G>;
+
+        fn cpu_gpu_static_partition_run_kernel(
+            bases_h: &mut [G],
+            exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
+            cuda_group_size: usize,
+            // size of the batch for cpu scalar mul
+            cpu_chunk_size: usize,
+        );
+    }
 }
 
 #[macro_export]
 macro_rules! impl_gpu_sw_projective {
     ($Parameters:ident) => {
-        impl<P: $Parameters> GPUScalarMul<GroupAffine<P>> for GroupProjective<P> {
+        impl<P: $Parameters> GPUScalarMulInternal<GroupAffine<P>> for GroupProjective<P> {
             const NUM_BITS: usize =
                 <<<Self as ProjectiveCurve>::ScalarField as PrimeField>::Params as FpParameters>::MODULUS_BITS as usize;
             const LOG2_W: usize = 5;
@@ -190,7 +240,7 @@ macro_rules! impl_gpu_sw_projective {
 #[macro_export]
 macro_rules! impl_gpu_te_projective {
     ($Parameters:ident) => {
-        impl<P: $Parameters> GPUScalarMul<GroupAffine<P>> for GroupProjective<P> {
+        impl<P: $Parameters> GPUScalarMulInternal<GroupAffine<P>> for GroupProjective<P> {
             const NUM_BITS: usize =
                 <<<Self as ProjectiveCurve>::ScalarField as PrimeField>::Params as FpParameters>::MODULUS_BITS as usize;
             const LOG2_W: usize = 5;
@@ -255,34 +305,6 @@ impl<G: AffineCurve> GPUScalarMulSlice<G> for [G] {
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
     ) {
-        #[cfg(feature = "cuda")]
-        {
-            // CUDA will return ILLEGAL_ADRESS if group elem size is too large.
-            if accel::Device::init() && core::mem::size_of::<G>() < MAX_GROUP_ELEM_BYTES {
-                <G as AffineCurve>::Projective::cpu_gpu_static_partition_run_kernel(
-                    self,
-                    exps_h,
-                    cuda_group_size,
-                    cpu_chunk_size,
-                );
-            } else {
-                let mut exps_mut = exps_h.to_vec();
-                cfg_chunks_mut!(self, cpu_chunk_size)
-                    .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))
-                    .for_each(|(b, s)| {
-                        b[..].batch_scalar_mul_in_place(&mut s[..], 4);
-                    });
-            }
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            let mut exps_mut = exps_h.to_vec();
-            cfg_chunks_mut!(self, cpu_chunk_size)
-                .zip(cfg_chunks_mut!(exps_mut, cpu_chunk_size))
-                .for_each(|(b, s)| {
-                    b[..].batch_scalar_mul_in_place(&mut s[..], 4);
-                });
-        }
+        G::Projective::cpu_gpu_scalar_mul(self, exps_h, cuda_group_size, cpu_chunk_size);
     }
 }

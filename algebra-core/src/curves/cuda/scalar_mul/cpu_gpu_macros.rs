@@ -181,7 +181,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 let s: String = serde_json::to_string(&(*profile_data)).expect("could not convert profiling data to string");
                 file.write_all(s.as_bytes()).expect("could not write profiling data to cache dir");
                 file.sync_all().expect("could not sync profiling data to disc");
-                timer_println!("write data");
+                timer_println!(_now, "write data");
 
                 debug!("new profile_data: {:?}", profile_data);
             }
