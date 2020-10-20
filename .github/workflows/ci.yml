@@ -38,7 +38,7 @@ jobs:
       matrix:
         rust:
           - stable
-          - nightly
+          - nightly-2020-10-04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -76,8 +76,8 @@ jobs:
         with:
             command: check
             args: --examples --all --benches
-        if: matrix.rust == 'nightly'
-
+        if: matrix.rust == 'nightly-2020-10-04'
+        
       - name: Test
         uses: actions-rs/cargo@v1
         with:
