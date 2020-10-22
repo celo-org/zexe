@@ -100,7 +100,19 @@ pub fn print_glv_params<G: ProjectiveCurve, WideBigInt: BigInteger, BaseFieldBig
     println!("const LAMBDA: Self::ScalarField = {:?};", lambda);
 
     let vecs = get_lattice_basis::<G::ScalarField>(n, lambda.into_repr());
-    // println!("{:?}", vecs);
+
+    // We check that (|B1| + 2) * (|B2| + 2) <  2 * n
+    // We use this to prove some bounds later
+    let mut b1 = vecs.0.1.1;
+    let mut b2 = vecs.1.1.1;
+    let two = <G::ScalarField as PrimeField>::BigInt::from(2);
+    b1.add_nocarry(&two);
+    b2.add_nocarry(&two);
+    let b1b2 = WideBigInt::mul_no_reduce(&b1.as_ref()[..], &b2.as_ref()[..]);
+    let wide_modulus = WideBigInt::from_slice(&n.as_ref()[..]);
+    let two_modulus = WideBigInt::mul_no_reduce_lo(&wide_modulus.as_ref()[..], &WideBigInt::from(2).as_ref()[..]);
+
+    assert!(b1b2 < two_modulus);
 
     for (i, vec) in [vecs.0, vecs.1].iter().enumerate() {
         // println!("vec: {:?}", vec);

@@ -62,24 +62,6 @@ impl GLVParameters for Parameters {
     );
     /// |round(B1 * R / n)|
     const Q2: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
-        14430678704534329733,
-        14479735877321354361,
-        6958676793196883088,
-        21,
-        0,
-        0,
-    ]);
-    const B1: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
-        9586122913090633729,
-        9963140610363752448,
-        2588746559005780992,
-        0,
-        0,
-        0,
-    ]);
-    const B1_IS_NEG: bool = false;
-    /// |round(B2 * R / n)|
-    const Q1: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
         11941976086484053770,
         4826578625773784813,
         2319558931065627696,
@@ -87,9 +69,27 @@ impl GLVParameters for Parameters {
         0,
         0,
     ]);
-    const B2: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
+    const B1: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
         6390748608727089153,
         3321046870121250816,
+        862915519668593664,
+        0,
+        0,
+        0,
+    ]);
+    const B1_IS_NEG: bool = true;
+    /// |round(B2 * R / n)|
+    const Q1: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
+        8993470605275773807,
+        4826578625773784734,
+        2319558931065627696,
+        7,
+        0,
+        0,
+    ]);
+    const B2: <Self::ScalarField as PrimeField>::BigInt = BigInteger384([
+        15251369769346007039,
+        3321046870121250815,
         862915519668593664,
         0,
         0,
