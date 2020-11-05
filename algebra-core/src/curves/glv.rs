@@ -55,9 +55,10 @@ pub trait GLVParameters: Send + Sync + 'static + ModelParameters {
         // We first assume that the final 2 bits of the representation for the modulus
         // is not set, so that 2 * n < R = 1 << (64 * NUM_LIMBS).
 
-        // wlog c1 = round(k * round(|b_1|R / n) / R) < ceil(k * ceil(|b_1|* R / n) / R) < k * (b_1 * R / n + 1) / R + 1
-        // <  b_1 * k / n + 2 < b_1 + 2, so a bound like (|b1| + 2) * (|b2| + 2) < 2 * n is good enough
-        // for wlog d1 < 2 * n
+        // wlog c1 = round(k * round(|b_1|R / n) / R) < ceil(k * ceil(|b_1|* R / n) / R)
+        // < k * (b_1 * R / n + 1) / R + 1 <  b_1 * k / n + 2 < b_1 + 2, so a
+        // bound like (|b1| + 2) * (|b2| + 2) < 2 * n is good enough for wlog d1
+        // < 2 * n
         let mut d1 =
             <Self::ScalarField as PrimeField>::BigInt::mul_no_reduce_lo(&c1, Self::B1.as_ref());
         if d1 > modulus {

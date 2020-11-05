@@ -101,20 +101,27 @@ pub fn print_glv_params<G: ProjectiveCurve, WideBigInt: BigInteger, BaseFieldBig
 
     let vecs = get_lattice_basis::<G::ScalarField>(n, lambda.into_repr());
 
-    // We check that (|B1| + 2) * (|B2| + 2) <  2 * n
+    // We check that `(|B1| + 2) * (|B2| + 2) <  2n`
+    // and `B_i^2 < 2n` e.g. `|B_i| < \sqrt{2n}$
     // We use this to prove some bounds later
-    let mut b1 = ((vecs.0).1).1;
-    let mut b2 = ((vecs.1).1).1;
-    let two = <G::ScalarField as PrimeField>::BigInt::from(2);
-    b1.add_nocarry(&two);
-    b2.add_nocarry(&two);
-    let b1b2 = WideBigInt::mul_no_reduce(&b1.as_ref()[..], &b2.as_ref()[..]);
     let wide_modulus = WideBigInt::from_slice(&n.as_ref()[..]);
     let two_modulus = WideBigInt::mul_no_reduce_lo(
         &wide_modulus.as_ref()[..],
         &WideBigInt::from(2).as_ref()[..],
     );
 
+    let mut b1 = ((vecs.0).1).1;
+    let mut b2 = ((vecs.1).1).1;
+    let two = <G::ScalarField as PrimeField>::BigInt::from(2);
+    let b1b1 = WideBigInt::mul_no_reduce(&b1.as_ref()[..], &b1.as_ref()[..]);
+    let b2b2 = WideBigInt::mul_no_reduce(&b2.as_ref()[..], &b2.as_ref()[..]);
+
+    b1.add_nocarry(&two);
+    b2.add_nocarry(&two);
+    let b1b2 = WideBigInt::mul_no_reduce(&b1.as_ref()[..], &b2.as_ref()[..]);
+
+    assert!(b1b1 < two_modulus);
+    assert!(b2b2 < two_modulus);
     assert!(b1b2 < two_modulus);
 
     for (i, vec) in [vecs.0, vecs.1].iter().enumerate() {
@@ -174,6 +181,9 @@ pub fn get_lattice_basis<F: PrimeField>(
     let mut t: [F; 3] = [zero, one, zero];
     let max_num_bits_lattice = (F::BigInt::from_slice(F::characteristic()).num_bits() - 1) / 2 + 1;
 
+    // We can use an approximation as we are merely using a heuristic. We should
+    // check that the parameters obtained from this heuristic satisfies the
+    // required conditions separately.
     let sqrt_n = as_f64(n.as_ref()).sqrt();
 
     // println!("Log sqrtn: {}", sqrt_n.log2());
