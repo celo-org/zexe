@@ -7,7 +7,8 @@ use crate::{
         models::{ModelParameters, SWModelParameters},
         GLVParameters,
     },
-    field_new, impl_scalar_mul_kernel, impl_scalar_mul_parameters, Zero, impl_glv_for_sw, PrimeField,
+    field_new, impl_glv_for_sw, impl_scalar_mul_kernel, impl_scalar_mul_parameters, PrimeField,
+    Zero,
 };
 
 pub type G2Affine = bls12::G2Affine<bls12_381::Parameters>;

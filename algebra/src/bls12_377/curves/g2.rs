@@ -5,14 +5,14 @@ use algebra_core::{
         models::{ModelParameters, SWModelParameters},
         GLVParameters,
     },
-    field_new, impl_glv_for_sw, PrimeField, Zero, impl_scalar_mul_kernel, impl_scalar_mul_parameters,
+    field_new, impl_glv_for_sw, impl_scalar_mul_kernel, impl_scalar_mul_parameters, PrimeField,
+    Zero,
 };
 
 use crate::{bls12_377, bls12_377::*};
 
 pub type G2Affine = bls12::G2Affine<bls12_377::Parameters>;
 pub type G2Projective = bls12::G2Projective<bls12_377::Parameters>;
-
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct Parameters;
