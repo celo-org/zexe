@@ -125,7 +125,6 @@ pub fn print_glv_params<G: ProjectiveCurve, WideBigInt: BigInteger, BaseFieldBig
     assert!(b1b2 < two_modulus);
 
     for (i, vec) in [vecs.0, vecs.1].iter().enumerate() {
-        // println!("vec: {:?}", vec);
         let (s1, (flag, t1)) = vec;
 
         let mut t1_big = WideBigInt::from_slice(t1.as_ref());
