@@ -160,9 +160,6 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                             timer_println!(_now, format!("gpu {} done", i));
                         });
-                        if jobs_result.lock().unwrap().as_ref().is_err() {
-                            return;
-                        }
                     }
 
                     // Run on CPU
