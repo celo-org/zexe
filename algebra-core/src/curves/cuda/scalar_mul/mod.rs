@@ -11,6 +11,8 @@ mod run_kernel_macros;
 #[cfg(feature = "cuda")]
 use std::sync::{Arc, Mutex};
 
+use core::fmt;
+
 use crate::{
     cfg_chunks_mut,
     curves::{AffineCurve, BatchGroupArithmeticSlice},
@@ -28,9 +30,46 @@ use rayon::prelude::*;
 
 pub const MAX_GROUP_ELEM_BYTES: usize = 400;
 
+#[derive(Debug)]
+pub enum CudaScalarMulError {
+    IoError(std::io::Error),
+    KernelFailedError,
+    ProfilingSerializationError,
+    ProfilingDeserializationError,
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for CudaScalarMulError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        None
+    }
+}
+
+impl From<std::io::Error> for CudaScalarMulError {
+    fn from(e: std::io::Error) -> Self {
+        CudaScalarMulError::IoError(e)
+    }
+}
+
+impl fmt::Display for CudaScalarMulError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            CudaScalarMulError::IoError(e) => write!(f, "Got IO error: {}", e),
+            CudaScalarMulError::KernelFailedError => write!(f, "Failed running kernel"),
+            CudaScalarMulError::ProfilingSerializationError => {
+                write!(f, "Failed serlializing profiling data")
+            }
+            CudaScalarMulError::ProfilingDeserializationError => {
+                write!(f, "Failed deserializing profiling data")
+            }
+        }
+    }
+}
+
 pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
-    fn clear_gpu_profiling_data() {
-        <Self as internal::GPUScalarMulInternal<G>>::clear_gpu_profiling_data();
+    fn clear_gpu_profiling_data_for_tests() {
+        <Self as internal::GPUScalarMulInternal<G>>::clear_gpu_profiling_data()
+            .expect("Should have cleared GPU profiling data");
     }
 
     #[allow(unused_variables)]
@@ -40,7 +79,7 @@ pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
         cuda_group_size: usize,
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
-    ) {
+    ) -> Result<(), CudaScalarMulError> {
         #[cfg(feature = "cuda")]
         {
             // CUDA will return ILLEGAL_ADRESS if group elem size is too large.
@@ -50,7 +89,7 @@ pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
                     exps_h,
                     cuda_group_size,
                     cpu_chunk_size,
-                );
+                )?;
             } else {
                 let mut exps_mut = exps_h.to_vec();
                 cfg_chunks_mut!(elems, cpu_chunk_size)
@@ -70,6 +109,8 @@ pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
                     b[..].batch_scalar_mul_in_place(&mut s[..], 4);
                 });
         }
+
+        Ok(())
     }
 }
 
@@ -85,7 +126,7 @@ pub(crate) mod internal {
     #[cfg(not(feature = "std"))]
     use alloc::vec::Vec;
 
-    use crate::{curves::AffineCurve, fields::PrimeField};
+    use crate::{curves::AffineCurve, fields::PrimeField, CudaScalarMulError};
 
     #[allow(unused_variables)]
     pub trait GPUScalarMulInternal<G: AffineCurve>: Sized {
@@ -98,7 +139,10 @@ pub(crate) mod internal {
 
         fn num_u8() -> usize;
 
-        fn clear_gpu_profiling_data();
+        fn init_gpu_cache_dir() -> Result<std::path::PathBuf, CudaScalarMulError>;
+        fn read_profile_data() -> Result<String, CudaScalarMulError>;
+        fn write_profile_data(profile_data: &str) -> Result<(), CudaScalarMulError>;
+        fn clear_gpu_profiling_data() -> Result<(), CudaScalarMulError>;
 
         fn par_run_kernel(
             ctx: &Context,
@@ -139,7 +183,7 @@ pub(crate) mod internal {
             cuda_group_size: usize,
             // size of the batch for cpu scalar mul
             cpu_chunk_size: usize,
-        );
+        ) -> Result<(), CudaScalarMulError>;
     }
 }
 
@@ -293,18 +337,17 @@ pub trait GPUScalarMulSlice<G: AffineCurve> {
         cuda_group_size: usize,
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
-    );
+    ) -> Result<(), CudaScalarMulError>;
 }
 
 impl<G: AffineCurve> GPUScalarMulSlice<G> for [G] {
-    #[allow(unused_variables)]
     fn cpu_gpu_scalar_mul(
         &mut self,
         exps_h: &[<<G as AffineCurve>::ScalarField as PrimeField>::BigInt],
         cuda_group_size: usize,
         // size of the batch for cpu scalar mul
         cpu_chunk_size: usize,
-    ) {
-        G::Projective::cpu_gpu_scalar_mul(self, exps_h, cuda_group_size, cpu_chunk_size);
+    ) -> Result<(), CudaScalarMulError> {
+        G::Projective::cpu_gpu_scalar_mul(self, exps_h, cuda_group_size, cpu_chunk_size)
     }
 }

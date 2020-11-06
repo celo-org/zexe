@@ -2,17 +2,37 @@
 #[macro_export]
 macro_rules! impl_gpu_cpu_run_kernel {
     () =>  {
-        fn clear_gpu_profiling_data() {
-            #[cfg(feature = "cuda")]
-            {
+        fn init_gpu_cache_dir() -> Result<std::path::PathBuf, crate::CudaScalarMulError> {
                 let dir = dirs::cache_dir()
                     .unwrap()
                     .join("zexe-algebra")
                     .join("cuda-scalar-mul-profiler")
                     .join(P::namespace());
-                std::fs::create_dir_all(&dir).expect("Could not create/get cache dir for profile data");
-                std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");
+                std::fs::create_dir_all(&dir)?;
+                Ok(dir)
+        }
+
+        fn read_profile_data() -> Result<String, crate::CudaScalarMulError> {
+            let dir = Self::init_gpu_cache_dir()?;
+            let data = std::fs::read_to_string(&dir.join("profile_data.txt"))?;
+            Ok(data)
+        }
+
+        fn clear_gpu_profiling_data() -> Result<(), crate::CudaScalarMulError> {
+            #[cfg(feature = "cuda")]
+            {
+                let dir = Self::init_gpu_cache_dir()?;
+                std::fs::File::create(&dir.join("profile_data.txt"))?;
             }
+            Ok(())
+        }
+
+        fn write_profile_data(profile_data: &str) -> Result<(), crate::CudaScalarMulError> {
+            let dir = Self::init_gpu_cache_dir()?;
+            let mut file = std::fs::File::create(&dir.join("profile_data.txt"))?;
+            file.write_all(profile_data.as_bytes())?;
+            file.sync_all()?;
+            Ok(())
         }
 
         /// We split up the job statically between the CPU and GPUs
@@ -28,7 +48,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
             cuda_group_size: usize,
             // size of the batch for cpu scalar mul
             cpu_chunk_size: usize,
-        ) {
+        ) -> Result<(), crate::CudaScalarMulError> {
             #[cfg(feature = "cuda")]
             {
                 if !Device::init() {
@@ -42,12 +62,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                 let _now = timer!();
                 // Get data for proportion of total throughput achieved by each device
-                let dir = dirs::cache_dir()
-                    .unwrap()
-                    .join("zexe-algebra")
-                    .join("cuda-scalar-mul-profiler")
-                    .join(P::namespace());
-                std::fs::create_dir_all(&dir).expect("Could not create/get cache dir for profile data");
+                let dir = Self::init_gpu_cache_dir()?;
 
                 let arc_mutex = P::scalar_mul_static_profiler();
                 let mut profile_data = arc_mutex.lock().unwrap();
@@ -56,8 +71,8 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 // If the program has just been initialised, we must check for the existence of existing
                 // cached profile data. If it does not exist, we create a new file
                 if proportions.is_empty() {
-                    let _ = std::fs::read_to_string(&dir.join("profile_data.txt"))
-                        .and_then(|s| { let res = serde_json::from_str(&s)?; Ok(res) })
+                    let _ = Self::read_profile_data()
+                        .and_then(|s| { let res = serde_json::from_str(&s).map_err(|_| crate::CudaScalarMulError::ProfilingDeserializationError)?; Ok(res) })
                         .and_then(|cached_data| {
                             *profile_data = cached_data;
                             proportions = profile_data.0.clone();
@@ -107,6 +122,8 @@ macro_rules! impl_gpu_cpu_run_kernel {
                 };
                 timer_println!(_now, "precomp and allocate on device");
 
+                let jobs_result: std::sync::Arc<Mutex<Result<(), crate::CudaScalarMulError>>> = std::sync::Arc::new(Mutex::new(Ok(())));
+
                 rayon::scope(|s| {
                     // Run jobs on GPUs
                     for (i, (bases_gpu, time_gpu)) in bases_split.iter_mut().zip(times_gpu.iter_mut()).enumerate() {
@@ -115,24 +132,32 @@ macro_rules! impl_gpu_cpu_run_kernel {
                         let table = &tables[i];
                         let exp = &exps[i];
 
+                        let jobs_result_inner = jobs_result.clone();
+
                         s.spawn(move |_| {
                             let now = std::time::Instant::now();
                             let _now = timer!();
 
                             let mut out = DeviceMemory::<Self>::zeros(ctx, n_gpu);
-                            P::scalar_mul_kernel(
+                            let result = P::scalar_mul_kernel(
                                 ctx,
                                 (n_gpu - 1) / cuda_group_size + 1, // grid
                                 cuda_group_size,     // block
                                 table.as_ptr(), exp.as_ptr(), out.as_mut_ptr(), n_gpu as isize
-                            )
-                            .expect("Kernel call failed");
+                            ).map_err(|_| crate::CudaScalarMulError::KernelFailedError);
+                            if result.is_err() {
+                                *jobs_result_inner.lock().unwrap() = result;
+                                return;
+                            }
                             Self::batch_normalization(&mut out[..]);
                             bases_gpu.clone_from_slice(&out.par_iter().map(|p| p.into_affine()).collect::<Vec<_>>()[..]);
                             *time_gpu = now.elapsed().as_micros();
 
                             timer_println!(_now, format!("gpu {} done", i));
                         });
+                        if jobs_result.lock().unwrap().as_ref().is_err() {
+                            return;
+                        }
                     }
 
                     // Run on CPU
@@ -152,8 +177,11 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     });
                 });
 
+                // It's safe to do this, since after the rayon scope we only have one reference.
+                std::sync::Arc::try_unwrap(jobs_result).unwrap().into_inner().unwrap()?;
+
                 // Update global microbenchmarking state
-                debug!("old profile_data: {:?}", profile_data);
+                debug!("CUDA old profile_data: {:?}", profile_data);
                 let cpu_throughput = n_cpu as f64 / time_cpu as f64;
                 let gpu_throughputs = n_gpus
                     .iter()
@@ -177,14 +205,15 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                 // Update cached profiling data on disk
                 let _now = timer!();
-                let mut file = std::fs::File::create(&dir.join("profile_data.txt")).expect("could not create profile_data.txt");
-                let s: String = serde_json::to_string(&(*profile_data)).expect("could not convert profiling data to string");
-                file.write_all(s.as_bytes()).expect("could not write profiling data to cache dir");
-                file.sync_all().expect("could not sync profiling data to disc");
+                let s: String = serde_json::to_string(&(*profile_data)).map_err(|_| crate::CudaScalarMulError::ProfilingSerializationError)?;
+                Self::write_profile_data(&s)?;
+
                 timer_println!(_now, "write data");
 
-                debug!("new profile_data: {:?}", profile_data);
+                debug!("CUDA new profile_data: {:?}", profile_data);
             }
+
+            Ok(())
         }
 
         #[allow(unused_variables)]
@@ -223,7 +252,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     s.spawn(|_| {
                         std::thread::sleep(std::time::Duration::from_millis(20));
                         let mut iter = queue.lock().unwrap();
-                        debug!("acquired cpu");
+                        debug!("CUDA acquired cpu");
                         while let Some((bases, exps)) = iter.next() {
                             let exps_mut = &mut exps.to_vec()[..];
                             rayon::scope(|t| {
@@ -233,12 +262,12 @@ macro_rules! impl_gpu_cpu_run_kernel {
                             });
                             // Sleep to allow other threads to unlock
                             drop(iter);
-                            debug!("unlocked cpu");
+                            debug!("CUDA unlocked cpu");
                             std::thread::sleep(std::time::Duration::from_millis(20));
                             iter = queue.lock().unwrap();
-                            debug!("acquired cpu");
+                            debug!("CUDA acquired cpu");
                         }
-                        debug!("CPU FINISH");
+                        debug!("CUDA cpu finish");
                     });
                 });
                 drop(queue);
