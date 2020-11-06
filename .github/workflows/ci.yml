@@ -15,14 +15,7 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Install Rust nightly for CUDA
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: nightly-2020-09-20
-        override: true
-        components: rustfmt
-    - name: Install Rust
+   - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
@@ -57,7 +50,14 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
-      - uses: actions/cache@v2
+    - name: Install Rust nightly for CUDA
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly-2020-09-20
+        components: rustfmt
+
+    - uses: actions/cache@v2
         with:
           path: |
             ~/.cargo/registry
