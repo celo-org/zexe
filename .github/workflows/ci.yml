@@ -15,7 +15,7 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Install Rust nightly 2020-09-20 for CUDA
+    - name: Install Rust nightly for CUDA
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
@@ -30,7 +30,6 @@ jobs:
         override: true
         components: rustfmt
         default: true
-
     - name: cargo fmt --check
       uses: actions-rs/cargo@v1
       with:
