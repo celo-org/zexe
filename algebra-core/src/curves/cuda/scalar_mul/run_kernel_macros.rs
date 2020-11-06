@@ -53,9 +53,8 @@ macro_rules! impl_run_kernel {
                 timer_println!(_now, "run kernel");
                 out
             }
-            // This needs to become a real impl in future
             #[cfg(not(feature = "cuda"))]
-            Vec::new()
+            unreachable!();
         }
 
         #[allow(unused_variables)]
@@ -94,9 +93,8 @@ macro_rules! impl_run_kernel {
                 timer_println!(_now, "run kernel");
                 out
             }
-            // This needs to become a real impl in future
             #[cfg(not(feature = "cuda"))]
-            Vec::new()
+            unreachable!();
         }
     };
 }
