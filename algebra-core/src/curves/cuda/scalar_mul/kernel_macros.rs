@@ -25,8 +25,8 @@ macro_rules! impl_scalar_mul_kernel {
             #[kernel_mod(transparent)]
             #[name([<$curve _ $type _cuda_namespace>])]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
-            #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
-            #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra", default_features = false, features = [$curve_string]})]
+            #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "master", package = "algebra-core", default_features = false})]
+            #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "master", package = "algebra", default_features = false, features = [$curve_string]})]
             pub mod scalar_mul {
                 use algebra::{$curve::$ProjCurve};
                 use algebra_core::{curves::ProjectiveCurve, fields::PrimeField, FpParameters, Zero};
@@ -94,8 +94,8 @@ macro_rules! impl_scalar_mul_kernel_glv {
             #[kernel_mod(transparent)]
             #[name([<$curve _ $type _cuda_namespace>])]
             #[dependencies("accel-core" = { git = "https://github.com/jon-chuang/accel", package = "accel-core" })]
-            #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra-core", default_features = false})]
-            #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "jonch/gpu_sc_mul", package = "algebra", default_features = false, features = [$curve_string]})]
+            #[dependencies("algebra-core" = { git = "https://github.com/celo-org/zexe", branch = "master", package = "algebra-core", default_features = false})]
+            #[dependencies("algebra" = { git = "https://github.com/celo-org/zexe", branch = "master", package = "algebra", default_features = false, features = [$curve_string]})]
             pub mod scalar_mul {
                 use algebra::{$curve::$ProjCurve};
                 use algebra_core::{curves::ProjectiveCurve, fields::PrimeField, FpParameters, Zero};
