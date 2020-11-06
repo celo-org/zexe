@@ -3,6 +3,8 @@
 macro_rules! impl_gpu_cpu_run_kernel {
     () =>  {
         fn init_gpu_cache_dir() -> Result<std::path::PathBuf, crate::CudaScalarMulError> {
+            #[cfg(feature = "cuda")]
+            {
                 let dir = dirs::cache_dir()
                     .unwrap()
                     .join("zexe-algebra")
@@ -10,6 +12,9 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     .join(P::namespace());
                 std::fs::create_dir_all(&dir)?;
                 Ok(dir)
+            }
+            #[cfg(not(feature = "cuda"))]
+            Err(crate::CudaScalarMulError::CudaDisabledError)
         }
 
         fn read_profile_data() -> Result<String, crate::CudaScalarMulError> {

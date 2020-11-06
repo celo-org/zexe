@@ -32,6 +32,7 @@ pub const MAX_GROUP_ELEM_BYTES: usize = 400;
 
 #[derive(Debug)]
 pub enum CudaScalarMulError {
+    CudaDisabledError,
     IoError(std::io::Error),
     KernelFailedError,
     ProfilingSerializationError,
@@ -54,6 +55,7 @@ impl From<std::io::Error> for CudaScalarMulError {
 impl fmt::Display for CudaScalarMulError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
+            CudaScalarMulError::CudaDisabledError => write!(f, "CUDA is disabled"),
             CudaScalarMulError::IoError(e) => write!(f, "Got IO error: {}", e),
             CudaScalarMulError::KernelFailedError => write!(f, "Failed running kernel"),
             CudaScalarMulError::ProfilingSerializationError => {
