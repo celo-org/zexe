@@ -77,7 +77,7 @@ jobs:
             command: check
             args: --examples --all --benches
         if: matrix.rust == 'nightly-2020-10-04'
-        
+
       - name: Test
         uses: actions-rs/cargo@v1
         with:
@@ -92,6 +92,13 @@ jobs:
         run: |
           cd algebra
           cargo test --features full
+          cd ..
+
+      - name: Test algebra
+        run: |
+          cd algebra
+          curl -sSL https://gitlab.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
+          cargo test --features "all_curves cuda cuda_test"
           cd ..
 
   check_no_std:
