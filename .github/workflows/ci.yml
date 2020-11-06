@@ -97,7 +97,7 @@ jobs:
       - name: Test algebra
         run: |
           cd algebra
-          curl -sSL https://gitlab.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
+          curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
           cargo test --features "all_curves cuda cuda_test"
           
       - name: Test algebra with BW6 assembly
