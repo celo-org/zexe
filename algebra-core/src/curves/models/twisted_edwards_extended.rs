@@ -748,6 +748,10 @@ impl<P: TEModelParameters> ProjectiveCurve for GroupProjective<P> {
         // Z3 = F*G
         self.z = f * &g;
     }
+
+    fn get_x(&mut self) -> &mut Self::BaseField {
+        &mut self.x
+    }
 }
 
 impl<P: TEModelParameters> Neg for GroupProjective<P> {
