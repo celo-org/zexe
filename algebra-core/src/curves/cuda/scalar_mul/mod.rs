@@ -33,7 +33,7 @@ pub const MAX_GROUP_ELEM_BYTES: usize = 400;
 #[derive(Debug)]
 pub enum CudaScalarMulError {
     CudaDisabledError,
-    IoError(std::io::Error),
+    IoError,
     KernelFailedError,
     ProfilingSerializationError,
     ProfilingDeserializationError,
@@ -46,9 +46,10 @@ impl std::error::Error for CudaScalarMulError {
     }
 }
 
+#[cfg(feature = "std")]
 impl From<std::io::Error> for CudaScalarMulError {
-    fn from(e: std::io::Error) -> Self {
-        CudaScalarMulError::IoError(e)
+    fn from(_: std::io::Error) -> Self {
+        CudaScalarMulError::IoError
     }
 }
 
@@ -56,7 +57,7 @@ impl fmt::Display for CudaScalarMulError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             CudaScalarMulError::CudaDisabledError => write!(f, "CUDA is disabled"),
-            CudaScalarMulError::IoError(e) => write!(f, "Got IO error: {}", e),
+            CudaScalarMulError::IoError=> write!(f, "IO error"),
             CudaScalarMulError::KernelFailedError => write!(f, "Failed running kernel"),
             CudaScalarMulError::ProfilingSerializationError => {
                 write!(f, "Failed serlializing profiling data")
@@ -127,6 +128,8 @@ pub(crate) mod internal {
 
     #[cfg(not(feature = "std"))]
     use alloc::vec::Vec;
+    #[cfg(not(feature = "std"))]
+    use alloc::string::String;
 
     use crate::{curves::AffineCurve, fields::PrimeField, CudaScalarMulError};
 
@@ -141,7 +144,7 @@ pub(crate) mod internal {
 
         fn num_u8() -> usize;
 
-        fn init_gpu_cache_dir() -> Result<std::path::PathBuf, CudaScalarMulError>;
+        fn init_gpu_cache_dir() -> Result<String, CudaScalarMulError>;
         fn read_profile_data() -> Result<String, CudaScalarMulError>;
         fn write_profile_data(profile_data: &str) -> Result<(), CudaScalarMulError>;
         fn clear_gpu_profiling_data() -> Result<(), CudaScalarMulError>;

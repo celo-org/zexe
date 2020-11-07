@@ -2,7 +2,8 @@
 #[macro_export]
 macro_rules! impl_gpu_cpu_run_kernel {
     () =>  {
-        fn init_gpu_cache_dir() -> Result<std::path::PathBuf, crate::CudaScalarMulError> {
+        #[allow(unused_qualifications)]
+        fn init_gpu_cache_dir() -> Result<crate::String, crate::CudaScalarMulError> {
             #[cfg(feature = "cuda")]
             {
                 let dir = dirs::cache_dir()
@@ -11,33 +12,47 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     .join("cuda-scalar-mul-profiler")
                     .join(P::namespace());
                 std::fs::create_dir_all(&dir)?;
-                Ok(dir)
+                Ok(dir.to_str().to_string())
             }
             #[cfg(not(feature = "cuda"))]
             Err(crate::CudaScalarMulError::CudaDisabledError)
         }
 
-        fn read_profile_data() -> Result<String, crate::CudaScalarMulError> {
-            let dir = Self::init_gpu_cache_dir()?;
-            let data = std::fs::read_to_string(&dir.join("profile_data.txt"))?;
-            Ok(data)
+        #[allow(unused_qualifications)]
+        fn read_profile_data() -> Result<crate::String, crate::CudaScalarMulError> {
+            #[cfg(feature = "cuda")]
+            {
+                let dir = Self::init_gpu_cache_dir()?;
+                let data = std::fs::read_to_string(&dir.join("profile_data.txt"))?;
+                Ok(data)
+            }
+            #[cfg(not(feature = "cuda"))]
+            Err(crate::CudaScalarMulError::CudaDisabledError)
         }
 
         fn clear_gpu_profiling_data() -> Result<(), crate::CudaScalarMulError> {
             #[cfg(feature = "cuda")]
             {
-                let dir = Self::init_gpu_cache_dir()?;
+                let dir = std::path::PathBuf::from(Self::init_gpu_cache_dir()?);
                 std::fs::File::create(&dir.join("profile_data.txt"))?;
+                Ok(())
             }
-            Ok(())
+            #[cfg(not(feature = "cuda"))]
+            Err(crate::CudaScalarMulError::CudaDisabledError)
         }
 
+        #[allow(unused_variables)]
         fn write_profile_data(profile_data: &str) -> Result<(), crate::CudaScalarMulError> {
-            let dir = Self::init_gpu_cache_dir()?;
-            let mut file = std::fs::File::create(&dir.join("profile_data.txt"))?;
-            file.write_all(profile_data.as_bytes())?;
-            file.sync_all()?;
-            Ok(())
+            #[cfg(feature = "cuda")]
+            {
+                let dir = std::path::PathBuf::from(Self::init_gpu_cache_dir()?);
+                let mut file = std::fs::File::create(&dir.join("profile_data.txt"))?;
+                file.write_all(profile_data.as_bytes())?;
+                file.sync_all()?;
+                Ok(())
+            }
+            #[cfg(not(feature = "cuda"))]
+            Err(crate::CudaScalarMulError::CudaDisabledError)
         }
 
         /// We split up the job statically between the CPU and GPUs
@@ -67,7 +82,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
 
                 let _now = timer!();
                 // Get data for proportion of total throughput achieved by each device
-                let dir = Self::init_gpu_cache_dir()?;
+                let _ = Self::init_gpu_cache_dir()?;
 
                 let arc_mutex = P::scalar_mul_static_profiler();
                 let mut profile_data = arc_mutex.lock().unwrap();
