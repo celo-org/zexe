@@ -70,7 +70,8 @@ impl fmt::Display for CudaScalarMulError {
 }
 
 pub trait GPUScalarMul<G: AffineCurve>: GPUScalarMulInternal<G> {
-    fn clear_gpu_profiling_data_for_tests() {
+    fn clear_gpu_profiling_data() {
+        #[cfg(feature = "cuda")]
         <Self as internal::GPUScalarMulInternal<G>>::clear_gpu_profiling_data()
             .expect("Should have cleared GPU profiling data");
     }
