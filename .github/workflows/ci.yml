@@ -61,6 +61,14 @@ jobs:
           sudo apt-get -y install cuda
           curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
 
+      - uses: actions/cache@v2	
+        with:	
+          path: |	
+            ~/.cargo/registry	
+            ~/.cargo/git	
+            target	
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Test algebra with CUDA
         run: |
           cd algebra
