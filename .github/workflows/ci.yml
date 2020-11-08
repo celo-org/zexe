@@ -68,6 +68,17 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Test algebra
+        run: |
+          cd algebra
+          cargo test --features full
+          cd ..
+
+      - name: Test algebra with CUDA
+        run: |
+          cd algebra
+          cargo test --features "all_curves cuda cuda_test"
 
       - name: Check examples
         uses: actions-rs/cargo@v1
@@ -98,17 +109,6 @@ jobs:
                    --exclude algebra-benches \
                    --exclude ff-fft-benches \
                    -- --skip dpc --skip integration_test"
-
-      - name: Test algebra
-        run: |
-          cd algebra
-          cargo test --features full
-          cd ..
-
-      - name: Test algebra with CUDA
-        run: |
-          cd algebra
-          cargo test --features "all_curves cuda cuda_test"
 
       - name: Test algebra with assembly
         run: |
