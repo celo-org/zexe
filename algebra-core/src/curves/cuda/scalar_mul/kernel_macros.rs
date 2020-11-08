@@ -35,7 +35,6 @@ macro_rules! impl_scalar_mul_kernel {
                     <<<$ProjCurve as ProjectiveCurve>::ScalarField as PrimeField>::Params as FpParameters>::MODULUS_BITS as isize;
                 const LOG2_W: isize = 5;
                 const TABLE_SIZE: isize = 1 << LOG2_W;
-                const HALF_TABLE_SIZE: isize = 1 << (LOG2_W - 1);
                 const NUM_U8: isize = (NUM_BITS - 1) / LOG2_W + 1;
 
                 #[kernel_func]

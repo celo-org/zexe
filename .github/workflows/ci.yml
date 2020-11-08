@@ -50,12 +50,9 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
-      - name: Install Rust nightly for CUDA
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2020-09-20
-          components: rustfmt
+      - name: Install CUDA toolchains
+        run: |
+          curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
 
       - uses: actions/cache@v2
         with:
@@ -104,7 +101,6 @@ jobs:
       - name: Test algebra with CUDA
         run: |
           cd algebra
-          curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
           cargo test --features "all_curves cuda cuda_test"
 
       - name: Test algebra with assembly

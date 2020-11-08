@@ -57,7 +57,7 @@ impl fmt::Display for CudaScalarMulError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             CudaScalarMulError::CudaDisabledError => write!(f, "CUDA is disabled"),
-            CudaScalarMulError::IoError=> write!(f, "IO error"),
+            CudaScalarMulError::IoError => write!(f, "IO error"),
             CudaScalarMulError::KernelFailedError => write!(f, "Failed running kernel"),
             CudaScalarMulError::ProfilingSerializationError => {
                 write!(f, "Failed serlializing profiling data")
@@ -127,9 +127,7 @@ pub(crate) mod internal {
     use crate::accel_dummy::*;
 
     #[cfg(not(feature = "std"))]
-    use alloc::vec::Vec;
-    #[cfg(not(feature = "std"))]
-    use alloc::string::String;
+    use alloc::{string::String, vec::Vec};
 
     use crate::{curves::AffineCurve, fields::PrimeField, CudaScalarMulError};
 

@@ -12,7 +12,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
                     .join("cuda-scalar-mul-profiler")
                     .join(P::namespace());
                 std::fs::create_dir_all(&dir)?;
-                Ok(dir.to_str().to_string())
+                Ok(dir.to_str().unwrap().to_string())
             }
             #[cfg(not(feature = "cuda"))]
             Err(crate::CudaScalarMulError::CudaDisabledError)
@@ -22,7 +22,7 @@ macro_rules! impl_gpu_cpu_run_kernel {
         fn read_profile_data() -> Result<crate::String, crate::CudaScalarMulError> {
             #[cfg(feature = "cuda")]
             {
-                let dir = Self::init_gpu_cache_dir()?;
+                let dir = std::path::PathBuf::from(Self::init_gpu_cache_dir()?);
                 let data = std::fs::read_to_string(&dir.join("profile_data.txt"))?;
                 Ok(data)
             }
