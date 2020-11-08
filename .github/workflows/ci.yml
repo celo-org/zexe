@@ -73,6 +73,7 @@ jobs:
         run: |
           cd algebra
           cargo test --features "all_curves cuda cuda_test"
+          cd ..
           
       - name: Test algebra
         run: |
