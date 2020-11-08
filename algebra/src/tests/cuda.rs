@@ -43,7 +43,7 @@ pub fn test_cuda_scalar_mul<G: AffineCurve>() {
         .for_each(|(b, s)| b[..].batch_scalar_mul_in_place(&mut s[..], 4));
     println!("CPU mul: {}us", now.elapsed().as_micros());
 
-    <G as AffineCurve>::Projective::clear_gpu_profiling_data_for_tests();
+    <G as AffineCurve>::Projective::clear_gpu_profiling_data();
 
     let mut junk_data = bases_d.to_vec();
     for _ in 0..3 {
