@@ -59,6 +59,7 @@ jobs:
           sudo apt-key add /var/cuda-repo-ubuntu1804-11-1-local/7fa2af80.pub
           sudo apt-get update
           sudo apt-get -y install cuda
+          rm cuda-repo-ubuntu*
           curl -sSL https://github.com/jon-chuang/accel/raw/master/setup_nvptx_toolchain.sh | bash
 
       - uses: actions/cache@v2	
