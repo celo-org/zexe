@@ -37,6 +37,12 @@ pub fn batch_bucketed_add<C: AffineCurve>(
     assert_eq!(elems.len(), bucket_positions.len());
     assert!(elems.len() > 0);
 
+    // High-probability upper bounds to prevent reallocations
+    // with associated * 2 space costs.
+    const BATCH_SIZE_UPPER_BOUND: usize = (BATCH_SIZE + (1 << 7)) / 2;
+    let new_len_upper_bound = elems.len() * 2 / 3;
+    let new_len_average_bound = elems.len() * (1 + 16) / (16 * 2);
+
     let _now = timer!();
     // We sort the bucket positions so that indices of elements assigned
     // to the same bucket are continguous. This way, we can easily identify
@@ -50,10 +56,10 @@ pub fn batch_bucketed_add<C: AffineCurve>(
     let mut glob = 0; // global counters
     let mut loc = 1; // local counter
     let mut batch = 0; // batch counter
-    let mut instr = Vec::<(u32, u32)>::with_capacity(BATCH_SIZE);
-    let mut new_elems = Vec::<C>::with_capacity(elems.len() * 3 / 8);
-
-    let mut scratch_space = Vec::<Option<C>>::with_capacity(BATCH_SIZE / 2);
+    let mut instr = Vec::<(u32, u32)>::with_capacity(BATCH_SIZE_UPPER_BOUND);
+    let mut new_elems = Vec::<C>::with_capacity(new_len_average_bound);
+    let mut scratch_space = Vec::<Option<C>>::with_capacity(BATCH_SIZE_UPPER_BOUND);
+    let mut reallocated = false;
 
     let _now = timer!();
     // In the first loop, we copy the results of the first in place addition tree
@@ -120,6 +126,10 @@ pub fn batch_bucketed_add<C: AffineCurve>(
             loc = 1;
 
             if batch >= BATCH_SIZE / 2 {
+                if !reallocated && new_len > new_len_average_bound {
+                    new_elems.reserve_exact(new_len_upper_bound - new_len_average_bound);
+                    reallocated = true;
+                }
                 // We need instructions for copying data in the case
                 // of noops. We encode noops/copies as !0u32
                 elems[..].batch_add_write(&instr[..], &mut new_elems, &mut scratch_space);
@@ -141,6 +151,8 @@ pub fn batch_bucketed_add<C: AffineCurve>(
         elems[..].batch_add_write(&instr[..], &mut new_elems, &mut scratch_space);
         instr.clear();
     }
+    // reduce space costs
+    new_elems.truncate(new_len);
     glob = 0;
     batch = 0;
     loc = 1;
