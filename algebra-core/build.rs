@@ -30,12 +30,12 @@ fn main() {
         println!("cargo:rustc-cfg=use_asm");
     }
 
-    let should_use_bw6_asm = cfg!(all(
+    let should_use_bw6_asm = cfg!(any(all(
         feature = "bw6_asm",
         target_feature = "bmi2",
         target_feature = "adx",
         target_arch = "x86_64"
-    ));
+    ), feature = "force_bw6_asm"));
     if should_use_bw6_asm {
         cc::Build::new()
             .file("bw6-assembly/modmul768-sos1-adx.S")
