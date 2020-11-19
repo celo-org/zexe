@@ -1,5 +1,5 @@
 use crate::{
-    curves::{BatchGroupArithmeticSlice, BATCH_SIZE},
+    curves::{BatchGroupArithmeticSlice, BATCH_AFFINE_BATCH_SIZE},
     AffineCurve, Vec,
 };
 
@@ -39,7 +39,7 @@ pub fn batch_bucketed_add<C: AffineCurve>(
 
     // High-probability upper bounds to prevent reallocations
     // with associated * 2 space costs.
-    const BATCH_SIZE_UPPER_BOUND: usize = (BATCH_SIZE + (1 << 7)) / 2;
+    const BATCH_SIZE_UPPER_BOUND: usize = (BATCH_AFFINE_BATCH_SIZE + (1 << 7)) / 2;
     let new_len_upper_bound = elems.len() * 2 / 3;
     let new_len_average_bound = elems.len() * (1 + 16) / (16 * 2);
 
@@ -125,7 +125,7 @@ pub fn batch_bucketed_add<C: AffineCurve>(
             batch += half;
             loc = 1;
 
-            if batch >= BATCH_SIZE / 2 {
+            if batch >= BATCH_AFFINE_BATCH_SIZE / 2 {
                 if !reallocated && new_len > new_len_average_bound {
                     new_elems.reserve_exact(new_len_upper_bound - new_len_average_bound);
                     reallocated = true;
@@ -194,7 +194,7 @@ pub fn batch_bucketed_add<C: AffineCurve>(
                 batch += half;
                 loc = 1;
 
-                if batch >= BATCH_SIZE / 2 {
+                if batch >= BATCH_AFFINE_BATCH_SIZE / 2 {
                     &mut new_elems[..].batch_add_in_place_same_slice(&instr[..]);
                     instr.clear();
                     batch = 0;
