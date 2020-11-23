@@ -18,80 +18,11 @@ pub(crate) fn decode_endo_from_u32(index_code: u32) -> (usize, u8) {
     )
 }
 
-/// We make the syntax for performing batch ops on slices cleaner
-/// by defining a corresponding trait and impl for [G] rather than on G
-/// We make the syntax for performing batch ops on slices cleaner
-/// by defining a corresponding trait and impl for [G] rather than on G
-pub trait BatchGroupArithmeticSlice<G: AffineCurve> {
-    fn batch_double_in_place(&mut self, index: &[u32]);
+/// We make use of the Montgomery trick to amortise finite field inversions
+/// in order to utilise the affine formulas for elliptic curve adds and doubles
+/// which are significantly cheaper for SW curves than the projective formulas
 
-    fn batch_add_in_place_same_slice(&mut self, index: &[(u32, u32)]);
-
-    fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]);
-
-    fn batch_add_write(
-        &self,
-        index: &[(u32, u32)],
-        new_elems: &mut Vec<G>,
-        scratch_space: &mut Vec<Option<G>>,
-    );
-
-    fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize);
-}
-
-impl<G: AffineCurve> BatchGroupArithmeticSlice<G> for [G] {
-    fn batch_double_in_place(&mut self, index: &[u32]) {
-        #[cfg(all(debug_assertions, feature = "std"))]
-        {
-            let mut set = std::collections::HashSet::new();
-            if !index.into_iter().all(|x| set.insert(*x)) {
-                panic!("Indices cannot be repeated");
-            }
-        }
-        G::batch_double_in_place(self, index, None);
-    }
-
-    fn batch_add_in_place_same_slice(&mut self, index: &[(u32, u32)]) {
-        #[cfg(all(debug_assertions, feature = "std"))]
-        {
-            let mut set = std::collections::HashSet::new();
-            if !index.into_iter().all(|(x, y)| {
-                set.insert(*x) && set.insert(*y)
-            }) {
-                panic!("Indices cannot be repeated");
-            }
-        }
-        G::batch_add_in_place_same_slice(self, index);
-    }
-
-    fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]) {
-        #[cfg(all(debug_assertions, feature = "std"))]
-        {
-            let mut set1 = std::collections::HashSet::new();
-            let mut set2 = std::collections::HashSet::new();
-            if !index.into_iter().all(|(x, y)| {
-                set1.insert(*x) && set2.insert(*y)
-            }) {
-                panic!("Indices cannot be repeated");
-            }
-        }
-        G::batch_add_in_place(self, other, index);
-    }
-
-    fn batch_add_write(
-        &self,
-        index: &[(u32, u32)],
-        new_elems: &mut Vec<G>,
-        scratch_space: &mut Vec<Option<G>>,
-    ) {
-        G::batch_add_write(self, index, new_elems, scratch_space);
-    }
-
-    fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize) {
-        G::batch_scalar_mul_in_place(self, scalars, w);
-    }
-}
-
+/// More detailed description in ../spec/algorithmic-optimisations.pdf
 pub(crate) mod internal {
     use crate::{biginteger::BigInteger, Field, Vec};
     use core::ops::Neg;
@@ -102,7 +33,6 @@ pub(crate) mod internal {
     where
         Self: Sized + Clone + Copy + Zero + Neg<Output = Self>,
     {
-
         type BaseFieldForBatch: Field;
 
         // We use the w-NAF method, achieving point density of approximately 1/(w + 1)
@@ -152,7 +82,8 @@ pub(crate) mod internal {
             let window_size: i16 = 1 << (w + 1);
             let half_window_size: i16 = 1 << w;
 
-            let mut op_code_vectorised = Vec::<Vec<Option<i16>>>::with_capacity(BigInt::NUM_LIMBS * 64);
+            let mut op_code_vectorised =
+                Vec::<Vec<Option<i16>>>::with_capacity(BigInt::NUM_LIMBS * 64);
 
             let mut all_none = false;
 
@@ -343,5 +274,79 @@ pub(crate) mod internal {
             }
             res
         }
+    }
+}
+
+/// We make the syntax for performing batch ops on slices cleaner
+/// by defining a corresponding trait and impl for [G] rather than on G
+pub trait BatchGroupArithmeticSlice<G: AffineCurve> {
+    fn batch_double_in_place(&mut self, index: &[u32]);
+
+    fn batch_add_in_place_same_slice(&mut self, index: &[(u32, u32)]);
+
+    fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]);
+
+    fn batch_add_write(
+        &self,
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<G>,
+        scratch_space: &mut Vec<Option<G>>,
+    );
+
+    fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize);
+}
+
+impl<G: AffineCurve> BatchGroupArithmeticSlice<G> for [G] {
+    fn batch_double_in_place(&mut self, index: &[u32]) {
+        #[cfg(all(debug_assertions, feature = "std"))]
+        {
+            let mut set = std::collections::HashSet::new();
+            if !index.into_iter().all(|x| set.insert(*x)) {
+                panic!("Indices cannot be repeated");
+            }
+        }
+        G::batch_double_in_place(self, index, None);
+    }
+
+    fn batch_add_in_place_same_slice(&mut self, index: &[(u32, u32)]) {
+        #[cfg(all(debug_assertions, feature = "std"))]
+        {
+            let mut set = std::collections::HashSet::new();
+            if !index
+                .into_iter()
+                .all(|(x, y)| set.insert(*x) && set.insert(*y))
+            {
+                panic!("Indices cannot be repeated");
+            }
+        }
+        G::batch_add_in_place_same_slice(self, index);
+    }
+
+    fn batch_add_in_place(&mut self, other: &mut Self, index: &[(u32, u32)]) {
+        #[cfg(all(debug_assertions, feature = "std"))]
+        {
+            let mut set1 = std::collections::HashSet::new();
+            let mut set2 = std::collections::HashSet::new();
+            if !index
+                .into_iter()
+                .all(|(x, y)| set1.insert(*x) && set2.insert(*y))
+            {
+                panic!("Indices cannot be repeated");
+            }
+        }
+        G::batch_add_in_place(self, other, index);
+    }
+
+    fn batch_add_write(
+        &self,
+        index: &[(u32, u32)],
+        new_elems: &mut Vec<G>,
+        scratch_space: &mut Vec<Option<G>>,
+    ) {
+        G::batch_add_write(self, index, new_elems, scratch_space);
+    }
+
+    fn batch_scalar_mul_in_place<BigInt: BigInteger>(&mut self, scalars: &mut [BigInt], w: usize) {
+        G::batch_scalar_mul_in_place(self, scalars, w);
     }
 }

@@ -1,6 +1,9 @@
 use crate::{biginteger::BigInteger, ModelParameters, PrimeField};
 use core::ops::Neg;
 
+/// GLV trait.
+/// More detailed description in ../spec/algorithmic-optimisations.pdf
+
 /// The GLV parameters here require the following conditions to be satisfied:
 /// 1. MODULUS_BITS < NUM_LIMBS * 64 - 1. So 2 * n < 1 << (64 * NUM_LIMBS)
 /// We also assume that (|b1| + 2) * (|b2| + 2) < 2 * n

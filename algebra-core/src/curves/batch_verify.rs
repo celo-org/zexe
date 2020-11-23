@@ -1,6 +1,8 @@
 use crate::{
     cfg_chunks_mut,
-    curves::{batch_bucketed_add, BatchGroupArithmeticSlice, BucketPosition, BATCH_AFFINE_BATCH_SIZE},
+    curves::{
+        batch_bucketed_add, BatchGroupArithmeticSlice, BucketPosition, BATCH_AFFINE_BATCH_SIZE,
+    },
     fields::FpParameters,
     AffineCurve, PrimeField, ProjectiveCurve, Vec,
 };
@@ -20,6 +22,11 @@ impl fmt::Display for VerificationError {
         write!(f, "Verification Error. Not in subgroup")
     }
 }
+
+/// Checks if points belong to the cyclic subgroup of prime order
+/// defined by ScalarField::modulus()
+
+/// More detailed description in ../spec/algorithmic-optimisations.pdf
 
 pub fn batch_verify_in_subgroup<C: AffineCurve, R: Rng>(
     points: &[C],
