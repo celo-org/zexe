@@ -157,9 +157,9 @@ modmul768:
 
 	movq	$0, zero
 
-	// Let rdx point to the stack space for y
+	// Let m point to the stack space for y
 
-	lea	16*8(%rsp), %rdx
+	lea	16*8(%rsp), m
 
 	// copy x to the stack
 
@@ -180,17 +180,17 @@ modmul768:
 
 	// copy y to the stack
 
-	mov	11*8(y), %rax;	mov	%rax, 11*8(%rdx)
-	mov	10*8(y), %rax;	mov	%rax, 10*8(%rdx)
-	mov	 9*8(y), %rax;	mov	%rax,  9*8(%rdx)
-	mov	 8*8(y), %rax;	mov	%rax,  8*8(%rdx)
-	mov	 7*8(y), %rax;	mov	%rax,  7*8(%rdx)
-	mov	 6*8(y), %rax;	mov	%rax,  6*8(%rdx)
-	mov	 5*8(y), %rax;	mov	%rax,  5*8(%rdx)
-	mov	 4*8(y), %rax;	mov	%rax,  4*8(%rdx)
-	mov	 3*8(y), %rax;	mov	%rax,  3*8(%rdx)
-	mov	 2*8(y), %rax;	mov	%rax,  2*8(%rdx)
-	mov	 1*8(y), %rax;	mov	%rax,  1*8(%rdx)
+	mov	11*8(y), %rax;	mov	%rax, 11*8(m)
+	mov	10*8(y), %rax;	mov	%rax, 10*8(m)
+	mov	 9*8(y), %rax;	mov	%rax,  9*8(m)
+	mov	 8*8(y), %rax;	mov	%rax,  8*8(m)
+	mov	 7*8(y), %rax;	mov	%rax,  7*8(m)
+	mov	 6*8(y), %rax;	mov	%rax,  6*8(m)
+	mov	 5*8(y), %rax;	mov	%rax,  5*8(m)
+	mov	 4*8(y), %rax;	mov	%rax,  4*8(m)
+	mov	 3*8(y), %rax;	mov	%rax,  3*8(m)
+	mov	 2*8(y), %rax;	mov	%rax,  2*8(m)
+	mov	 1*8(y), %rax;	mov	%rax,  1*8(m)
 	mov	 0*8(y), %rdx
 
 // y0
