@@ -65,3 +65,4 @@ timing_thread_id = [ "thread-id" ]
 
 llvm_asm = [ "field-assembly" ]
 force_bw6_asm = [ "bw6_asm" ]
+force_bw6_asm_armv8 = [ "bw6_asm" ]
