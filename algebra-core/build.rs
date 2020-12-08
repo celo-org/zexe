@@ -54,10 +54,7 @@ fn main() {
     }
 
     let should_use_bw6_asm_armv8 = cfg!(any(
-        all(
-            feature = "bw6_asm",
-            target_arch = "aarch64"
-        ),
+        all(feature = "bw6_asm", target_arch = "aarch64"),
         feature = "force_bw6_asm_armv8"
     ));
     if should_use_bw6_asm_armv8 {
