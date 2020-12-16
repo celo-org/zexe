@@ -74,6 +74,9 @@ fn main() {
         cc::Build::new()
             .file("bw6-assembly/modsub768.S")
             .compile("modsub768");
+        cc::Build::new()
+            .file("bw6-assembly/modsqr768-kos1-adx.S")
+            .compile("modsqr768");
         println!("cargo:rustc-cfg=use_bw6_asm");
     }
 
