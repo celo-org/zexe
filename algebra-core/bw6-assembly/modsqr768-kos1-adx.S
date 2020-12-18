@@ -22,8 +22,8 @@
 #	define z4	%rsi
 #endif
 
-#define	z0	pl
-#define	z1	%rax
+#define z0	pl
+#define z1	%rax
 #define z2	%rbx
 #define z3	%rbp
 
@@ -35,22 +35,22 @@
 #define z10	%r14
 #define z11	%r15
 
-#define	l0	 0*8(x)
-#define	l1	 1*8(x)
+#define l0	 0*8(x)
+#define l1	 1*8(x)
 #define l2	 2*8(x)
 #define l3	 3*8(x)
 #define l4	 4*8(x)
 #define l5	 5*8(x)
 
-#define	h0	 6*8(x)
-#define	h1	 7*8(x)
+#define h0	 6*8(x)
+#define h1	 7*8(x)
 #define h2	 8*8(x)
 #define h3	 9*8(x)
 #define h4	10*8(x)
 #define h5	11*8(x)
 
-#define	c0	 5*8(%rsp)
-#define	c1	 4*8(%rsp)
+#define c0	 5*8(%rsp)
+#define c1	 4*8(%rsp)
 #define c2	 3*8(%rsp)
 #define c3	 2*8(%rsp)
 #define c4	 1*8(%rsp)
@@ -268,33 +268,33 @@ modsqr768:
 	//   there is no reverse subtract for integers
 	//   we need to preserve xh^2 and xl^2 on the stack for now
 
-#define	u0	ph
-#define	u1	x
-#define	u2	z1
-#define	u3	z2
-#define	u4	z3
-#define	u5	z4
-#define	u6	z5
-#define	u7	z6
-#define	u8	z7
-#define	u9	z8
-#define	u10	z9
-#define	u11	z10
-#define	u12	z11
+#define u0	ph
+#define u1	x
+#define u2	z1
+#define u3	z2
+#define u4	z3
+#define u5	z4
+#define u6	z5
+#define u7	z6
+#define u8	z7
+#define u9	z8
+#define u10	z9
+#define u11	z10
+#define u12	z11
 
-#define	v0	pl
-#define	v1	u0
-#define	v2	u1
-#define	v3	u2
-#define	v4	u3
-#define	v5	u4
-#define	v6	u5
-#define	v7	u6
-#define	v8	u7
-#define	v9	u8
-#define	v10	u9
-#define	v11	u10
-#define	v12	u11
+#define v0	pl
+#define v1	u0
+#define v2	u1
+#define v3	u2
+#define v4	u3
+#define v5	u4
+#define v6	u5
+#define v7	u6
+#define v8	u7
+#define v9	u8
+#define v10	u9
+#define v11	u10
+#define v12	u11
 
 	mov	(12 -0)*8(%rdx),  u0;	sub	  x,  u0
 	mov	(12 -1)*8(%rdx),  u1;	sbb	 z1,  u1
@@ -364,18 +364,18 @@ modsqr768:
 #define l	z11
 #define h	v12
 
-#define	t0	v0
-#define	t1	v1
-#define	t2	v2
-#define	t3	v3
-#define	t4	v4
-#define	t5	v5
-#define	t6	v6
-#define	t7	v7
-#define	t8	v8
-#define	t9	v9
-#define	t10	v10
-#define	t11	v11
+#define t0	v0
+#define t1	v1
+#define t2	v2
+#define t3	v3
+#define t4	v4
+#define t5	v5
+#define t6	v6
+#define t7	v7
+#define t8	v8
+#define t9	v9
+#define t10	v10
+#define t11	v11
 #define t12	t0
 #define t13	t1
 #define t14	t2
@@ -716,10 +716,10 @@ modsqr768:
 	cmovc	c7, t19
 	cmovc	c8, t20
 	cmovc	c9, t21
-	cmovc	c10, t22
-	cmovc	c11, t23
-					// Deallocate stack
-	mov	t12,  0*8(%rdx);	add	$(13+12+12+2)*8, %rsp
+	cmovc	c10, t22	// Deallocate stack
+	cmovc	c11, t23;	add	$(13+12+12+2)*8, %rsp
+
+	mov	t12,  0*8(%rdx)
 	mov	t13,  1*8(%rdx)
 	mov	t14,  2*8(%rdx)
 	mov	t15,  3*8(%rdx)
@@ -746,5 +746,3 @@ modsqr768:
 	pop	%r15
 
 	ret
-
-// vim: noet ts=8 sw=8 si ai
