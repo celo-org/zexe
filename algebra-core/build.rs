@@ -18,17 +18,15 @@ fn replace_extension(file_name: &str, extension: &str) -> String {
 fn preprocess_and_replace_semicolon(file_name: &str, tag: &str) {
     const EXPANDED_SUFFIX: &str = "SCE.S";
     const WITHOUT_SEMICOLON_SUFFIX: &str = "SCR.S";
-    let expanded = cc::Build::new()
-        .file(file_name)
-        .expand();
+    let expanded = cc::Build::new().file(file_name).expand();
     let expanded_path = replace_extension(file_name, EXPANDED_SUFFIX);
     std::fs::write(&expanded_path, expanded).expect("Should have expanded");
-    let replaced = std::fs::read_to_string(expanded_path).expect("Should have read expanded file").replace(";", "\n");
+    let replaced = std::fs::read_to_string(expanded_path)
+        .expect("Should have read expanded file")
+        .replace(";", "\n");
     let replaced_path = replace_extension(file_name, WITHOUT_SEMICOLON_SUFFIX);
     std::fs::write(&replaced_path, replaced).expect("Should have written replaced file");
-    cc::Build::new()
-        .file(replaced_path)
-        .compile(tag);
+    cc::Build::new().file(replaced_path).compile(tag);
 }
 
 fn main() {
