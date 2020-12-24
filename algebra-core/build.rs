@@ -82,7 +82,8 @@ fn main() {
         all(feature = "bw6_asm", target_arch = "aarch64"),
         feature = "force_bw6_asm_armv8"
     ));
-    if should_use_bw6_asm_armv8 {
+    // if x86 assembly was enabled, don't enable ARM
+    if should_use_bw6_asm_armv8 && !should_use_bw6_asm {
         preprocess_and_replace_semicolon("bw6-assembly/modmul768-armv8-kos.S", "modmul768");
         preprocess_and_replace_semicolon("bw6-assembly/modadd768-armv8.S", "modadd768");
         preprocess_and_replace_semicolon("bw6-assembly/modsub768-armv8.S", "modsub768");
