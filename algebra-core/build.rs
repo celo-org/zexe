@@ -58,9 +58,14 @@ fn main() {
     let should_use_bw6_asm = cfg!(any(
         all(
             feature = "bw6_asm",
-            target_feature = "bmi2",
-            target_feature = "adx",
-            target_arch = "x86_64"
+            any(
+                all(
+                    target_arch = "x86_64",
+                    target_feature = "bmi2",
+                    target_feature = "adx"
+                ),
+                target_arch = "aarch64"
+            )
         ),
         feature = "force_bw6_asm"
     ));
