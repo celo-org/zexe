@@ -15,18 +15,20 @@ fn replace_extension(file_name: &str, extension: &str) -> String {
     new_name.as_os_str().to_str().unwrap().to_string()
 }
 
-fn preprocess_and_replace_semicolon(file_name: &str, tag: &str) {
+fn preprocess_and_replace_semicolon(top_level_file: &str, file_names: &[&str], tag: &str) {
     const EXPANDED_SUFFIX: &str = "SCE.S";
     const WITHOUT_SEMICOLON_SUFFIX: &str = "SCR.S";
-    let expanded = cc::Build::new().file(file_name).expand();
-    let expanded_path = replace_extension(file_name, EXPANDED_SUFFIX);
-    std::fs::write(&expanded_path, expanded).expect("Should have expanded");
-    let replaced = std::fs::read_to_string(expanded_path)
-        .expect("Should have read expanded file")
-        .replace(";", "\n");
-    let replaced_path = replace_extension(file_name, WITHOUT_SEMICOLON_SUFFIX);
-    std::fs::write(&replaced_path, replaced).expect("Should have written replaced file");
-    cc::Build::new().file(replaced_path).compile(tag);
+    for file_name in file_names {
+        let expanded = cc::Build::new().file(file_name).expand();
+        let expanded_path = replace_extension(file_name, EXPANDED_SUFFIX);
+        std::fs::write(&expanded_path, expanded).expect("Should have expanded");
+        let replaced = std::fs::read_to_string(expanded_path)
+            .expect("Should have read expanded file")
+            .replace(";", "\n");
+        let replaced_path = replace_extension(file_name, WITHOUT_SEMICOLON_SUFFIX);
+        std::fs::write(&replaced_path, replaced).expect("Should have written replaced file");
+    }
+    cc::Build::new().file(top_level_file).compile(tag);
 }
 
 fn main() {
@@ -63,31 +65,10 @@ fn main() {
         feature = "force_bw6_asm"
     ));
     if should_use_bw6_asm {
-        cc::Build::new()
-            .file("bw6-assembly/modmul768-sos1-adx.S")
-            .compile("modmul768");
-        cc::Build::new()
-            .file("bw6-assembly/modadd768.S")
-            .compile("modadd768");
-        cc::Build::new()
-            .file("bw6-assembly/modsub768.S")
-            .compile("modsub768");
-        cc::Build::new()
-            .file("bw6-assembly/modsqr768-kos1-adx.S")
-            .compile("modsqr768");
-        println!("cargo:rustc-cfg=use_bw6_asm");
-    }
-
-    let should_use_bw6_asm_armv8 = cfg!(any(
-        all(feature = "bw6_asm", target_arch = "aarch64"),
-        feature = "force_bw6_asm_armv8"
-    ));
-    // if x86 assembly was enabled, don't enable ARM
-    if should_use_bw6_asm_armv8 && !should_use_bw6_asm {
-        preprocess_and_replace_semicolon("bw6-assembly/modmul768-armv8-kos.S", "modmul768");
-        preprocess_and_replace_semicolon("bw6-assembly/modadd768-armv8.S", "modadd768");
-        preprocess_and_replace_semicolon("bw6-assembly/modsub768-armv8.S", "modsub768");
-        preprocess_and_replace_semicolon("bw6-assembly/modsqr768-armv8-kos.S", "modsqr768");
+        preprocess_and_replace_semicolon("bw6-assembly/modmul768.S", &vec!["bw6-assembly/modmul768-x86_64.S", "bw6-assembly/modmul768-armv8.S"], "modmul768");
+        preprocess_and_replace_semicolon("bw6-assembly/modadd768.S", &vec!["bw6-assembly/modadd768-x86_64.S", "bw6-assembly/modadd768-armv8.S"], "modadd768");
+        preprocess_and_replace_semicolon("bw6-assembly/modsub768.S", &vec!["bw6-assembly/modsub768-x86_64.S", "bw6-assembly/modsub768-armv8.S"], "modsub768");
+        preprocess_and_replace_semicolon("bw6-assembly/modsqr768.S", &vec!["bw6-assembly/modsqr768-x86_64.S", "bw6-assembly/modsqr768-armv8.S"], "modsqr768");
         println!("cargo:rustc-cfg=use_bw6_asm");
     }
 }
