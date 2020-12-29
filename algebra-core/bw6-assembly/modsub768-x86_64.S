@@ -125,17 +125,17 @@ modsub768:
 	// Conditional addition of m
 
 	mov	 t0,  z0;	add	 m0,  t0
-	mov	 t1,  z1;	adc	 m1,  t1
-	mov	 t2,  z2;	adc	 m2,  t2
-	mov	 t3,  z3;	adc	 m3,  t3
-	mov	 t4,  z4;	adc	 m4,  t4
-	mov	 t5,  z5;	adc	 m5,  t5
-	mov	 t6,  z6;	adc	 m6,  t6
-	mov	 t7,  z7;	adc	 m7,  t7
-	mov	 t8,  z8;	adc	 m8,  t8
-	mov	 t9,  z9;	adc	 m9,  t9
-	mov	t10, z10;	adc	m10, t10
-	mov	t11, z11;	adc	m11, t11
+	mov	 t1,  z1;	adcq	 m1,  t1
+	mov	 t2,  z2;	adcq	 m2,  t2
+	mov	 t3,  z3;	adcq	 m3,  t3
+	mov	 t4,  z4;	adcq	 m4,  t4
+	mov	 t5,  z5;	adcq	 m5,  t5
+	mov	 t6,  z6;	adcq	 m6,  t6
+	mov	 t7,  z7;	adcq	 m7,  t7
+	mov	 t8,  z8;	adcq	 m8,  t8
+	mov	 t9,  z9;	adcq	 m9,  t9
+	mov	t10, z10;	adcq	m10, t10
+	mov	t11, z11;	adcq	m11, t11
 
 	add	 $1, t12	// sets carry if adding m is needed
 
