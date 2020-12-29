@@ -70,10 +70,38 @@ fn main() {
         feature = "force_bw6_asm"
     ));
     if should_use_bw6_asm {
-        preprocess_and_replace_semicolon("bw6-assembly/modmul768.S", &vec!["bw6-assembly/modmul768-x86_64.S", "bw6-assembly/modmul768-armv8.S"], "modmul768");
-        preprocess_and_replace_semicolon("bw6-assembly/modadd768.S", &vec!["bw6-assembly/modadd768-x86_64.S", "bw6-assembly/modadd768-armv8.S"], "modadd768");
-        preprocess_and_replace_semicolon("bw6-assembly/modsub768.S", &vec!["bw6-assembly/modsub768-x86_64.S", "bw6-assembly/modsub768-armv8.S"], "modsub768");
-        preprocess_and_replace_semicolon("bw6-assembly/modsqr768.S", &vec!["bw6-assembly/modsqr768-x86_64.S", "bw6-assembly/modsqr768-armv8.S"], "modsqr768");
+        preprocess_and_replace_semicolon(
+            "bw6-assembly/modmul768.S",
+            &vec![
+                "bw6-assembly/modmul768-x86_64.S",
+                "bw6-assembly/modmul768-armv8.S",
+            ],
+            "modmul768",
+        );
+        preprocess_and_replace_semicolon(
+            "bw6-assembly/modadd768.S",
+            &vec![
+                "bw6-assembly/modadd768-x86_64.S",
+                "bw6-assembly/modadd768-armv8.S",
+            ],
+            "modadd768",
+        );
+        preprocess_and_replace_semicolon(
+            "bw6-assembly/modsub768.S",
+            &vec![
+                "bw6-assembly/modsub768-x86_64.S",
+                "bw6-assembly/modsub768-armv8.S",
+            ],
+            "modsub768",
+        );
+        preprocess_and_replace_semicolon(
+            "bw6-assembly/modsqr768.S",
+            &vec![
+                "bw6-assembly/modsqr768-x86_64.S",
+                "bw6-assembly/modsqr768-armv8.S",
+            ],
+            "modsqr768",
+        );
         println!("cargo:rustc-cfg=use_bw6_asm");
     }
 }
