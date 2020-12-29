@@ -105,18 +105,18 @@ modadd768:
 
 	xor	t12, t12
 	add	 y0,  t0
-	adc	 y1,  t1
-	adc	 y2,  t2
-	adc	 y3,  t3
-	adc	 y4,  t4
-	adc	 y5,  t5
-	adc	 y6,  t6
-	adc	 y7,  t7
-	adc	 y8,  t8
-	adc	 y9,  t9
-	adc	y10, t10
-	adc	y11, t11
-	adc	 $0, t12
+	adcq	 y1,  t1
+	adcq	 y2,  t2
+	adcq	 y3,  t3
+	adcq	 y4,  t4
+	adcq	 y5,  t5
+	adcq	 y6,  t6
+	adcq	 y7,  t7
+	adcq	 y8,  t8
+	adcq	 y9,  t9
+	adcq	y10, t10
+	adcq	y11, t11
+	adcq	 $0, t12
 
 	// no more need for y. load z in its place
 

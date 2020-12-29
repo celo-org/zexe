@@ -71,7 +71,7 @@ modadd768:
 	stp	x25, x26, [SP, # 6*8];	ldp	 a6,  a7, [a, # 6*8];	ldp	 b6,  b7, [b, # 6*8];	adcs	 a6,  a6,  b6;	adcs	 a7,  a7,  b7
 	stp	x27, x28, [SP, # 8*8];	ldp	 a8,  a9, [a, # 8*8];	ldp	 b8,  b9, [b, # 8*8];	adcs	 a8,  a8,  b8;	adcs	 a9,  a9,  b9
 					ldp	a10, a11, [a, #10*8];	ldp	b10, b11, [b, #10*8];	adcs	a10, a10, b10;	adcs	a11, a11, b11
-													adc	a12, XZR, XZR
+													adcq	a12, XZR, XZR
 	// Load m			// m = a-m
 
 	ldp	 m0,  m1, [m, # 0*8];	subs	 m0,  a0,  m0;	sbcs	 m1,  a1,  m1;

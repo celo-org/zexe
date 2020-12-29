@@ -89,92 +89,92 @@ modsqr768:
 	mov	l0, %rdx;	mulx	l5, z5, z6
 
 /*	mov	l0, %rdx;*/	mulx	l4, z4, ph;			add	ph, z5
-	mov	l1, %rdx;	mulx	l5, pl, z7;	adc	pl, z6;	adc	$0, z7
+	mov	l1, %rdx;	mulx	l5, pl, z7;	adcq	pl, z6;	adcq	$0, z7
 
 	mov	l0, %rdx;	mulx	l3, z3, ph;			add	ph, z4
-	mov	l1, %rdx;	mulx	l4, pl, ph;	adc	pl, z5;	adc	ph, z6
-	mov	l2, %rdx;	mulx	l5, pl, z8;	adc	pl, z7;	adc	$0, z8
+	mov	l1, %rdx;	mulx	l4, pl, ph;	adcq	pl, z5;	adcq	ph, z6
+	mov	l2, %rdx;	mulx	l5, pl, z8;	adcq	pl, z7;	adcq	$0, z8
 
 /*	mov	l2, %rdx;*/	mulx	l0, z2, ph;			add	ph, z3
-	mov	l1, %rdx;	mulx	l3, pl, ph;	adc	pl, z4;	adc	ph, z5
-	mov	l2, %rdx;	mulx	l4, pl, ph;	adc	pl, z6;	adc	ph, z7
-	mov	l3, %rdx;	mulx	l5, pl, z9;	adc	pl, z8;	adc	$0, z9
+	mov	l1, %rdx;	mulx	l3, pl, ph;	adcq	pl, z4;	adcq	ph, z5
+	mov	l2, %rdx;	mulx	l4, pl, ph;	adcq	pl, z6;	adcq	ph, z7
+	mov	l3, %rdx;	mulx	l5, pl, z9;	adcq	pl, z8;	adcq	$0, z9
 
 	mov	l0, %rdx;	mulx	l1, z1, ph;			add	ph, z2
-	mov	l1, %rdx;	mulx	l2, pl, ph;	adc	pl, z3;	adc	ph, z4
-	mov	l2, %rdx;	mulx	l3, pl, ph;	adc	pl, z5;	adc	ph, z6
-	mov	l3, %rdx;	mulx	l4, pl, ph;	adc	pl, z7;	adc	ph, z8
-	mov	l4, %rdx;	mulx	l5, pl, z10;	adc	pl, z9;	adc	$0, z10
+	mov	l1, %rdx;	mulx	l2, pl, ph;	adcq	pl, z3;	adcq	ph, z4
+	mov	l2, %rdx;	mulx	l3, pl, ph;	adcq	pl, z5;	adcq	ph, z6
+	mov	l3, %rdx;	mulx	l4, pl, ph;	adcq	pl, z7;	adcq	ph, z8
+	mov	l4, %rdx;	mulx	l5, pl, z10;	adcq	pl, z9;	adcq	$0, z10
 
 	// Double
 
 	xor	z11, z11
 	add	z1, z1
-	adc	z2, z2
-	adc	z3, z3
-	adc	z4, z4
-	adc	z5, z5
-	adc	z6, z6
-	adc	z7, z7
-	adc	z8, z8
-	adc	z9, z9
-	adc	z10, z10
-	adc	z11, z11
+	adcq	z2, z2
+	adcq	z3, z3
+	adcq	z4, z4
+	adcq	z5, z5
+	adcq	z6, z6
+	adcq	z7, z7
+	adcq	z8, z8
+	adcq	z9, z9
+	adcq	z10, z10
+	adcq	z11, z11
 
 	// Main diagonal
 
 	mov	l0, %rdx;	mulx	%rdx, z0, ph;	push	z0;		add	ph, z1;		push z1
-	mov	l1, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z2;		adc	ph, z3;		push z2
-	mov	l2, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z4;		adc	ph, z5;		push z3
-	mov	l3, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z6;		adc	ph, z7;		push z4
-	mov	l4, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z8;		adc	ph, z9;		push z5
-	mov	l5, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z10;	adc	ph, z11;	push z6
+	mov	l1, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z2;		adcq	ph, z3;		push z2
+	mov	l2, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z4;		adcq	ph, z5;		push z3
+	mov	l3, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z6;		adcq	ph, z7;		push z4
+	mov	l4, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z8;		adcq	ph, z9;		push z5
+	mov	l5, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z10;	adcq	ph, z11;	push z6
 
 	// Compute xh^2, save to stack
 
 	mov	h0, %rdx;	mulx	h5, z5, z6;	push	z7
 
 /*	mov	h0, %rdx;*/	mulx	h4, z4, ph;			add	ph, z5;	push	z8
-	mov	h1, %rdx;	mulx	h5, pl, z7;	adc	pl, z6;	adc	$0, z7;	push	z9
+	mov	h1, %rdx;	mulx	h5, pl, z7;	adcq	pl, z6;	adcq	$0, z7;	push	z9
 
 	mov	h0, %rdx;	mulx	h3, z3, ph;			add	ph, z4;	push	z10
-	mov	h1, %rdx;	mulx	h4, pl, ph;	adc	pl, z5;	adc	ph, z6;	push	z11
-	mov	h2, %rdx;	mulx	h5, pl, z8;	adc	pl, z7;	adc	$0, z8
+	mov	h1, %rdx;	mulx	h4, pl, ph;	adcq	pl, z5;	adcq	ph, z6;	push	z11
+	mov	h2, %rdx;	mulx	h5, pl, z8;	adcq	pl, z7;	adcq	$0, z8
 
 /*	mov	h2, %rdx;*/	mulx	h0, z2, ph;			add	ph, z3
-	mov	h1, %rdx;	mulx	h3, pl, ph;	adc	pl, z4;	adc	ph, z5
-	mov	h2, %rdx;	mulx	h4, pl, ph;	adc	pl, z6;	adc	ph, z7
-	mov	h3, %rdx;	mulx	h5, pl, z9;	adc	pl, z8;	adc	$0, z9
+	mov	h1, %rdx;	mulx	h3, pl, ph;	adcq	pl, z4;	adcq	ph, z5
+	mov	h2, %rdx;	mulx	h4, pl, ph;	adcq	pl, z6;	adcq	ph, z7
+	mov	h3, %rdx;	mulx	h5, pl, z9;	adcq	pl, z8;	adcq	$0, z9
 
 	mov	h0, %rdx;	mulx	h1, z1, ph;			add	ph, z2
-	mov	h1, %rdx;	mulx	h2, pl, ph;	adc	pl, z3;	adc	ph, z4
-	mov	h2, %rdx;	mulx	h3, pl, ph;	adc	pl, z5;	adc	ph, z6
-	mov	h3, %rdx;	mulx	h4, pl, ph;	adc	pl, z7;	adc	ph, z8
-	mov	h4, %rdx;	mulx	h5, pl, z10;	adc	pl, z9;	adc	$0, z10
+	mov	h1, %rdx;	mulx	h2, pl, ph;	adcq	pl, z3;	adcq	ph, z4
+	mov	h2, %rdx;	mulx	h3, pl, ph;	adcq	pl, z5;	adcq	ph, z6
+	mov	h3, %rdx;	mulx	h4, pl, ph;	adcq	pl, z7;	adcq	ph, z8
+	mov	h4, %rdx;	mulx	h5, pl, z10;	adcq	pl, z9;	adcq	$0, z10
 
 	// Double
 
 	xor	z11, z11
 	add	z1, z1
-	adc	z2, z2
-	adc	z3, z3
-	adc	z4, z4
-	adc	z5, z5
-	adc	z6, z6
-	adc	z7, z7
-	adc	z8, z8
-	adc	z9, z9
-	adc	z10, z10
-	adc	z11, z11
+	adcq	z2, z2
+	adcq	z3, z3
+	adcq	z4, z4
+	adcq	z5, z5
+	adcq	z6, z6
+	adcq	z7, z7
+	adcq	z8, z8
+	adcq	z9, z9
+	adcq	z10, z10
+	adcq	z11, z11
 
 	// Main diagonal
 
 	mov	h0, %rdx;	mulx	%rdx, z0, ph;	push	z0;		add	ph, z1;		push z1
-	mov	h1, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z2;		adc	ph, z3;		push z2
-	mov	h2, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z4;		adc	ph, z5;		push z3
-	mov	h3, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z6;		adc	ph, z7;		push z4
-	mov	h4, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z8;		adc	ph, z9;		push z5
-	mov	h5, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z10;	adc	ph, z11;	push z6
+	mov	h1, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z2;		adcq	ph, z3;		push z2
+	mov	h2, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z4;		adcq	ph, z5;		push z3
+	mov	h3, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z6;		adcq	ph, z7;		push z4
+	mov	h4, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z8;		adcq	ph, z9;		push z5
+	mov	h5, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z10;	adcq	ph, z11;	push z6
 
 	// Compute z = (xl-xh)
 
@@ -208,46 +208,46 @@ modsqr768:
 	mov	z0, %rdx;	mulx	z5, z5, z6
 
 /*	mov	z0, %rdx;*/	mulx	z4, z4, ph;			add	ph, z5
-	mov	z1, %rdx;	mulx	c5, pl, z7;	adc	pl, z6;	adc	$0, z7
+	mov	z1, %rdx;	mulx	c5, pl, z7;	adcq	pl, z6;	adcq	$0, z7
 
 	mov	c0, %rdx;	mulx	z3, z3, ph;			add	ph, z4
-	mov	z1, %rdx;	mulx	c4, pl, ph;	adc	pl, z5;	adc	ph, z6
-	mov	z2, %rdx;	mulx	c5, pl, z8;	adc	pl, z7;	adc	$0, z8
+	mov	z1, %rdx;	mulx	c4, pl, ph;	adcq	pl, z5;	adcq	ph, z6
+	mov	z2, %rdx;	mulx	c5, pl, z8;	adcq	pl, z7;	adcq	$0, z8
 
 /*	mov	c2, %rdx;*/	mulx	c0, z2, ph;			add	ph, z3
-	mov	z1, %rdx;	mulx	c3, pl, ph;	adc	pl, z4;	adc	ph, z5
-	mov	c2, %rdx;	mulx	c4, pl, ph;	adc	pl, z6;	adc	ph, z7
-	mov	c3, %rdx;	mulx	c5, pl, z9;	adc	pl, z8;	adc	$0, z9
+	mov	z1, %rdx;	mulx	c3, pl, ph;	adcq	pl, z4;	adcq	ph, z5
+	mov	c2, %rdx;	mulx	c4, pl, ph;	adcq	pl, z6;	adcq	ph, z7
+	mov	c3, %rdx;	mulx	c5, pl, z9;	adcq	pl, z8;	adcq	$0, z9
 
 	mov	c0, %rdx;	mulx	z1, z1, ph;			add	ph, z2
-	mov	c1, %rdx;	mulx	c2, pl, ph;	adc	pl, z3;	adc	ph, z4
-	mov	c2, %rdx;	mulx	c3, pl, ph;	adc	pl, z5;	adc	ph, z6
-	mov	c3, %rdx;	mulx	c4, pl, ph;	adc	pl, z7;	adc	ph, z8
-	mov	c4, %rdx;	mulx	c5, pl, z10;	adc	pl, z9;	adc	$0, z10
+	mov	c1, %rdx;	mulx	c2, pl, ph;	adcq	pl, z3;	adcq	ph, z4
+	mov	c2, %rdx;	mulx	c3, pl, ph;	adcq	pl, z5;	adcq	ph, z6
+	mov	c3, %rdx;	mulx	c4, pl, ph;	adcq	pl, z7;	adcq	ph, z8
+	mov	c4, %rdx;	mulx	c5, pl, z10;	adcq	pl, z9;	adcq	$0, z10
 
 	// Double
 
 	xor	z11, z11
 	add	z1, z1
-	adc	z2, z2
-	adc	z3, z3
-	adc	z4, z4
-	adc	z5, z5
-	adc	z6, z6
-	adc	z7, z7
-	adc	z8, z8
-	adc	z9, z9
-	adc	z10, z10
-	adc	z11, z11
+	adcq	z2, z2
+	adcq	z3, z3
+	adcq	z4, z4
+	adcq	z5, z5
+	adcq	z6, z6
+	adcq	z7, z7
+	adcq	z8, z8
+	adcq	z9, z9
+	adcq	z10, z10
+	adcq	z11, z11
 
 	// Main diagonal
 
 	mov	c0, %rdx;	mulx	%rdx,  x, ph;				add	ph, z1
-	mov	c1, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z2;		adc	ph, z3
-	mov	c2, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z4;		adc	ph, z5
-	mov	c3, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z6;		adc	ph, z7
-	mov	c4, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z8;		adc	ph, z9
-	mov	c5, %rdx;	mulx	%rdx, pl, ph;	adc	pl, z10;	adc	ph, z11
+	mov	c1, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z2;		adcq	ph, z3
+	mov	c2, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z4;		adcq	ph, z5
+	mov	c3, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z6;		adcq	ph, z7
+	mov	c4, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z8;		adcq	ph, z9
+	mov	c5, %rdx;	mulx	%rdx, pl, ph;	adcq	pl, z10;	adcq	ph, z11
 
 #undef c0
 #undef c1
@@ -311,18 +311,18 @@ modsqr768:
 	mov	             $0, u12;	sbb	u12, u12
 
 	mov	(0 -0)*8(%rdx),  v0;	add	 u0,  v0
-	mov	(0 -1)*8(%rdx),  v1;	adc	 u1,  v1
-	mov	(0 -2)*8(%rdx),  v2;	adc	 u2,  v2
-	mov	(0 -3)*8(%rdx),  v3;	adc	 u3,  v3
-	mov	(0 -4)*8(%rdx),  v4;	adc	 u4,  v4
-	mov	(0 -5)*8(%rdx),  v5;	adc	 u5,  v5
-	mov	(0 -6)*8(%rdx),  v6;	adc	 u6,  v6
-	mov	(0 -7)*8(%rdx),  v7;	adc	 u7,  v7
-	mov	(0 -8)*8(%rdx),  v8;	adc	 u8,  v8
-	mov	(0 -9)*8(%rdx),  v9;	adc	 u9,  v9
-	mov	(0-10)*8(%rdx), v10;	adc	u10, v10
-	mov	(0-11)*8(%rdx), v11;	adc	u11, v11
-	mov		    $0, v12;	adc	u12, v12
+	mov	(0 -1)*8(%rdx),  v1;	adcq	 u1,  v1
+	mov	(0 -2)*8(%rdx),  v2;	adcq	 u2,  v2
+	mov	(0 -3)*8(%rdx),  v3;	adcq	 u3,  v3
+	mov	(0 -4)*8(%rdx),  v4;	adcq	 u4,  v4
+	mov	(0 -5)*8(%rdx),  v5;	adcq	 u5,  v5
+	mov	(0 -6)*8(%rdx),  v6;	adcq	 u6,  v6
+	mov	(0 -7)*8(%rdx),  v7;	adcq	 u7,  v7
+	mov	(0 -8)*8(%rdx),  v8;	adcq	 u8,  v8
+	mov	(0 -9)*8(%rdx),  v9;	adcq	 u9,  v9
+	mov	(0-10)*8(%rdx), v10;	adcq	u10, v10
+	mov	(0-11)*8(%rdx), v11;	adcq	u11, v11
+	mov		    $0, v12;	adcq	u12, v12
 
 	// z11 is no longer in use. restore m into it
 
@@ -341,23 +341,23 @@ modsqr768:
 	// Karatsuba multiplication	// Load m[]
 
 	add	 v0, (6 -0)*8(%rdx);	mov	 0*8(m),  v0
-	adc	 v1, (6 -1)*8(%rdx);	mov	 1*8(m),  v1
-	adc	 v2, (6 -2)*8(%rdx);	mov	 2*8(m),  v2
-	adc	 v3, (6 -3)*8(%rdx);	mov	 3*8(m),  v3
-	adc	 v4, (6 -4)*8(%rdx);	mov	 4*8(m),  v4
-	adc	 v5, (6 -5)*8(%rdx);	mov	 5*8(m),  v5
-	adc	 v6, (6 -6)*8(%rdx);	mov	 6*8(m),  v6
-	adc	 v7, (6 -7)*8(%rdx);	mov	 7*8(m),  v7
-	adc	 v8, (6 -8)*8(%rdx);	mov	 8*8(m),  v8
-	adc	 v9, (6 -9)*8(%rdx);	mov	 9*8(m),  v9
-	adc	v10, (6-10)*8(%rdx);	mov	10*8(m), v10
-	adc	v11, (6-11)*8(%rdx);	mov	11*8(m), v11
-	adc	v12, (6-12)*8(%rdx)
-	adc	 $0, (6-13)*8(%rdx)
-	adc	 $0, (6-14)*8(%rdx)
-	adc	 $0, (6-15)*8(%rdx)
-	adc	 $0, (6-16)*8(%rdx)
-	adc	 $0, (6-17)*8(%rdx);	mov	12*8(m), %rdx
+	adcq	 v1, (6 -1)*8(%rdx);	mov	 1*8(m),  v1
+	adcq	 v2, (6 -2)*8(%rdx);	mov	 2*8(m),  v2
+	adcq	 v3, (6 -3)*8(%rdx);	mov	 3*8(m),  v3
+	adcq	 v4, (6 -4)*8(%rdx);	mov	 4*8(m),  v4
+	adcq	 v5, (6 -5)*8(%rdx);	mov	 5*8(m),  v5
+	adcq	 v6, (6 -6)*8(%rdx);	mov	 6*8(m),  v6
+	adcq	 v7, (6 -7)*8(%rdx);	mov	 7*8(m),  v7
+	adcq	 v8, (6 -8)*8(%rdx);	mov	 8*8(m),  v8
+	adcq	 v9, (6 -9)*8(%rdx);	mov	 9*8(m),  v9
+	adcq	v10, (6-10)*8(%rdx);	mov	10*8(m), v10
+	adcq	v11, (6-11)*8(%rdx);	mov	11*8(m), v11
+	adcq	v12, (6-12)*8(%rdx)
+	adcq	 $0, (6-13)*8(%rdx)
+	adcq	 $0, (6-14)*8(%rdx)
+	adcq	 $0, (6-15)*8(%rdx)
+	adcq	 $0, (6-16)*8(%rdx)
+	adcq	 $0, (6-17)*8(%rdx);	mov	12*8(m), %rdx
 
 	// Prepare defines to suit the reduction code
 
@@ -442,7 +442,7 @@ modsqr768:
 
 // 1
 
-	mov	inv, %rdx;	adcx	l, t10;	adcx	h, t11;	adc	$0, t12
+	mov	inv, %rdx;	adcx	l, t10;	adcx	h, t11;	adcq	$0, t12
 	mulx	t1, %rdx, h
 	xor	h, h
 
@@ -461,7 +461,7 @@ modsqr768:
 
 // 2
 
-	mov	inv, %rdx;	adcx	l, t11;	adcx	h, t12;	adc	$0, t13
+	mov	inv, %rdx;	adcx	l, t11;	adcx	h, t12;	adcq	$0, t13
 	mulx	t2, %rdx, h
 	xor	h, h
 
@@ -480,7 +480,7 @@ modsqr768:
 
 // 3
 
-	mov	inv, %rdx;	adcx	l, t12;	adcx	h, t13;	adc	$0, t14
+	mov	inv, %rdx;	adcx	l, t12;	adcx	h, t13;	adcq	$0, t14
 	mulx	t3, %rdx, h
 	xor	h, h
 
@@ -499,7 +499,7 @@ modsqr768:
 
 // 4
 
-	mov	inv, %rdx;	adcx	l, t13;	adcx	h, t14;	adc	$0, t15
+	mov	inv, %rdx;	adcx	l, t13;	adcx	h, t14;	adcq	$0, t15
 	mulx	t4, %rdx, h
 	xor	h, h
 
@@ -518,7 +518,7 @@ modsqr768:
 
 // 5
 
-	mov	inv, %rdx;	adcx	l, t14;	adcx	h, t15;	adc	$0, t16
+	mov	inv, %rdx;	adcx	l, t14;	adcx	h, t15;	adcq	$0, t16
 	mulx	t5, %rdx, h
 	xor	h, h
 
@@ -537,7 +537,7 @@ modsqr768:
 
 // 6
 
-	mov	inv, %rdx;	adcx	l, t15;	adcx	h, t16;	adc	$0, t17
+	mov	inv, %rdx;	adcx	l, t15;	adcx	h, t16;	adcq	$0, t17
 	mulx	t6, %rdx, h
 	xor	h, h
 
@@ -556,7 +556,7 @@ modsqr768:
 
 // 7
 
-	mov	inv, %rdx;	adcx	l, t16;	adcx	h, t17;	adc	$0, t18
+	mov	inv, %rdx;	adcx	l, t16;	adcx	h, t17;	adcq	$0, t18
 	mulx	t7, %rdx, h
 	xor	h, h
 
@@ -575,7 +575,7 @@ modsqr768:
 
 // 8
 
-	mov	inv, %rdx;	adcx	l, t17;	adcx	h, t18;	adc	$0, t19
+	mov	inv, %rdx;	adcx	l, t17;	adcx	h, t18;	adcq	$0, t19
 	mulx	t8, %rdx, h
 	xor	h, h
 
@@ -594,7 +594,7 @@ modsqr768:
 
 // 9
 
-	mov	inv, %rdx;	adcx	l, t18;	adcx	h, t19;	adc	$0, t20
+	mov	inv, %rdx;	adcx	l, t18;	adcx	h, t19;	adcq	$0, t20
 	mulx	t9, %rdx, h
 	xor	h, h
 
@@ -613,7 +613,7 @@ modsqr768:
 
 // 10
 
-	mov	inv, %rdx;	adcx	l, t19;	adcx	h, t20;	adc	$0, t21
+	mov	inv, %rdx;	adcx	l, t19;	adcx	h, t20;	adcq	$0, t21
 	mulx	t10, %rdx, h
 	xor	h, h
 
@@ -632,7 +632,7 @@ modsqr768:
 
 // 11
 
-	mov	inv, %rdx;	adcx	l, t20;	adcx	h, t21;	adc	$0, t22
+	mov	inv, %rdx;	adcx	l, t20;	adcx	h, t21;	adcq	$0, t22
 	mulx	t11, %rdx, h
 	xor	h, h
 
@@ -647,7 +647,7 @@ modsqr768:
 	mulx	m9, l, h;	adox	l, t20;	adox	h, t21
 	mulx	m8, l, h;	adcx	l, t19;	adcx	h, t20
 	mulx	m11, l, h;	adox	l, t22;	adox	h, t23
-	mulx	m10, l, h;	adcx	l, t21;	adcx	h, t22;	adc	$0, t23
+	mulx	m10, l, h;	adcx	l, t21;	adcx	h, t22;	adcq	$0, t23
 
 				// l = original stack pointer
 	xor	t24, t24;	lea	8*(13+12+12+2+6)(%rsp), l
@@ -678,18 +678,18 @@ modsqr768:
 #define c23	13*8(%rsp)
 
 	add	c12, t12
-	adc	c13, t13
-	adc	c14, t14
-	adc	c15, t15
-	adc	c16, t16
-	adc	c17, t17
-	adc	c18, t18
-	adc	c19, t19
-	adc	c20, t20
-	adc	c21, t21
-	adc	c22, t22
-	adc	c23, t23	// Restore c into rdx
-	adc	$0, t24;	mov	-7*8(l), %rdx
+	adcq	c13, t13
+	adcq	c14, t14
+	adcq	c15, t15
+	adcq	c16, t16
+	adcq	c17, t17
+	adcq	c18, t18
+	adcq	c19, t19
+	adcq	c20, t20
+	adcq	c21, t21
+	adcq	c22, t22
+	adcq	c23, t23	// Restore c into rdx
+	adcq	$0, t24;	mov	-7*8(l), %rdx
 
 	// Conditional subtraction of m
 

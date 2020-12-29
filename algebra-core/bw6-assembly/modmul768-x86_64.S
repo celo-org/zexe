@@ -215,7 +215,7 @@ modmul768:
 
 // y1
 
-	mov	y1, %rdx;	adc	$0, t12
+	mov	y1, %rdx;	adcq	$0, t12
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t2;	adox	h, t3
@@ -234,7 +234,7 @@ modmul768:
 
 // y2
 
-	mov	y2, %rdx;	adc	$0, t13
+	mov	y2, %rdx;	adcq	$0, t13
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t3;	adox	h, t4
@@ -253,7 +253,7 @@ modmul768:
 
 // y3
 
-	mov	y3, %rdx;	adc	$0, t14
+	mov	y3, %rdx;	adcq	$0, t14
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t4;	adox	h, t5
@@ -272,7 +272,7 @@ modmul768:
 
 // y4
 
-	mov	y4, %rdx;	adc	$0, t15
+	mov	y4, %rdx;	adcq	$0, t15
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t5;	adox	h, t6
@@ -291,7 +291,7 @@ modmul768:
 
 // y5
 
-	mov	y5, %rdx;	adc	$0, t16
+	mov	y5, %rdx;	adcq	$0, t16
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t6;	adox	h, t7
@@ -310,7 +310,7 @@ modmul768:
 
 // y6
 
-	mov	y6, %rdx;	adc	$0, t17
+	mov	y6, %rdx;	adcq	$0, t17
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t7;	adox	h, t8
@@ -329,7 +329,7 @@ modmul768:
 
 // y7
 
-	mov	y7, %rdx;	adc	$0, t18
+	mov	y7, %rdx;	adcq	$0, t18
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t8;	adox	h, t9
@@ -348,7 +348,7 @@ modmul768:
 
 // y8
 
-	mov	y8, %rdx;	adc	$0, t19
+	mov	y8, %rdx;	adcq	$0, t19
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t9;	adox	h, t10
@@ -367,7 +367,7 @@ modmul768:
 
 // y9
 
-	mov	y9, %rdx;	adc	$0, t20
+	mov	y9, %rdx;	adcq	$0, t20
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t10;	adox	h, t11
@@ -386,7 +386,7 @@ modmul768:
 
 // y10
 
-	mov	y10, %rdx;	adc	$0, t21
+	mov	y10, %rdx;	adcq	$0, t21
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t11;	adox	h, t12
@@ -405,7 +405,7 @@ modmul768:
 
 // y11
 
-	mov	y11, %rdx;	adc	$0, t22
+	mov	y11, %rdx;	adcq	$0, t22
 	xor	h, h
 
 	mulx	x1, l, h;	adox	l, t12;	adox	h, t13
@@ -424,7 +424,7 @@ modmul768:
 
 	// Copy m to the stack, overwriting x
 
-	mov	 0*8(%rsp), h;	adc	$0, t23
+	mov	 0*8(%rsp), h;	adcq	$0, t23
 	mov	12*8(h), %rdx;	mov	%rdx, inv
 	mov	11*8(h), %rax;	mov	%rax, m11
 	mov	10*8(h), %rax;	mov	%rax, m10
@@ -479,7 +479,7 @@ modmul768:
 
 // z1
 
-	mov	inv, %rdx;	adcx	l, t10;	adcx	h, t11;	adc	$0, t12
+	mov	inv, %rdx;	adcx	l, t10;	adcx	h, t11;	adcq	$0, t12
 	mulx	t1, %rdx, h
 	xor	h, h
 
@@ -498,7 +498,7 @@ modmul768:
 
 // z2
 
-	mov	inv, %rdx;	adcx	l, t11;	adcx	h, t12;	adc	$0, t13
+	mov	inv, %rdx;	adcx	l, t11;	adcx	h, t12;	adcq	$0, t13
 	mulx	t2, %rdx, h
 	xor	h, h
 
@@ -517,7 +517,7 @@ modmul768:
 
 // z3
 
-	mov	inv, %rdx;	adcx	l, t12;	adcx	h, t13;	adc	$0, t14
+	mov	inv, %rdx;	adcx	l, t12;	adcx	h, t13;	adcq	$0, t14
 	mulx	t3, %rdx, h
 	xor	h, h
 
@@ -536,7 +536,7 @@ modmul768:
 
 // z4
 
-	mov	inv, %rdx;	adcx	l, t13;	adcx	h, t14;	adc	$0, t15
+	mov	inv, %rdx;	adcx	l, t13;	adcx	h, t14;	adcq	$0, t15
 	mulx	t4, %rdx, h
 	xor	h, h
 
@@ -555,7 +555,7 @@ modmul768:
 
 // z5
 
-	mov	inv, %rdx;	adcx	l, t14;	adcx	h, t15;	adc	$0, t16
+	mov	inv, %rdx;	adcx	l, t14;	adcx	h, t15;	adcq	$0, t16
 	mulx	t5, %rdx, h
 	xor	h, h
 
@@ -574,7 +574,7 @@ modmul768:
 
 // z6
 
-	mov	inv, %rdx;	adcx	l, t15;	adcx	h, t16;	adc	$0, t17
+	mov	inv, %rdx;	adcx	l, t15;	adcx	h, t16;	adcq	$0, t17
 	mulx	t6, %rdx, h
 	xor	h, h
 
@@ -593,7 +593,7 @@ modmul768:
 
 // z7
 
-	mov	inv, %rdx;	adcx	l, t16;	adcx	h, t17;	adc	$0, t18
+	mov	inv, %rdx;	adcx	l, t16;	adcx	h, t17;	adcq	$0, t18
 	mulx	t7, %rdx, h
 	xor	h, h
 
@@ -612,7 +612,7 @@ modmul768:
 
 // z8
 
-	mov	inv, %rdx;	adcx	l, t17;	adcx	h, t18;	adc	$0, t19
+	mov	inv, %rdx;	adcx	l, t17;	adcx	h, t18;	adcq	$0, t19
 	mulx	t8, %rdx, h
 	xor	h, h
 
@@ -631,7 +631,7 @@ modmul768:
 
 // z9
 
-	mov	inv, %rdx;	adcx	l, t18;	adcx	h, t19;	adc	$0, t20
+	mov	inv, %rdx;	adcx	l, t18;	adcx	h, t19;	adcq	$0, t20
 	mulx	t9, %rdx, h
 	xor	h, h
 
@@ -650,7 +650,7 @@ modmul768:
 
 // z10
 
-	mov	inv, %rdx;	adcx	l, t19;	adcx	h, t20;	adc	$0, t21
+	mov	inv, %rdx;	adcx	l, t19;	adcx	h, t20;	adcq	$0, t21
 	mulx	t10, %rdx, h
 	xor	h, h
 
@@ -669,7 +669,7 @@ modmul768:
 
 // z11
 
-	mov	inv, %rdx;	adcx	l, t20;	adcx	h, t21;	adc	$0, t22
+	mov	inv, %rdx;	adcx	l, t20;	adcx	h, t21;	adcq	$0, t22
 	mulx	t11, %rdx, h
 	xor	h, h
 
@@ -684,23 +684,23 @@ modmul768:
 	mulx	m9, l, h;	adox	l, t20;	adox	h, t21
 	mulx	m8, l, h;	adcx	l, t19;	adcx	h, t20
 	mulx	m11, l, h;	adox	l, t22;	adox	h, t23
-	mulx	m10, l, h;	adcx	l, t21;	adcx	h, t22;	adc	$0, t23
+	mulx	m10, l, h;	adcx	l, t21;	adcx	h, t22;	adcq	$0, t23
 
 	xor	t24, t24;	lea	8*(1+13+2+24+6)(%rsp), %rax
 
 	add	z12, t12
-	adc	z13, t13
-	adc	z14, t14
-	adc	z15, t15
-	adc	z16, t16
-	adc	z17, t17
-	adc	z18, t18
-	adc	z19, t19
-	adc	z20, t20
-	adc	z21, t21
-	adc	z22, t22
-	adc	z23, t23
-	adc	$0, t24;	mov	15*8(%rsp), %rdx
+	adcq	z13, t13
+	adcq	z14, t14
+	adcq	z15, t15
+	adcq	z16, t16
+	adcq	z17, t17
+	adcq	z18, t18
+	adcq	z19, t19
+	adcq	z20, t20
+	adcq	z21, t21
+	adcq	z22, t22
+	adcq	z23, t23
+	adcq	$0, t24;	mov	15*8(%rsp), %rdx
 
 	// Conditional subtraction of m
 
