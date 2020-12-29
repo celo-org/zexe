@@ -57,7 +57,7 @@
 #define c5	 0*8(%rsp)
 
 #ifdef __APPLE__
-#define sqr768 _sqr768
+#define modsqr768 _modsqr768
 #endif
 
 .global modsqr768
