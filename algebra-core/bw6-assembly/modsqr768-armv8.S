@@ -127,14 +127,14 @@
 	mul	c##4, a##4, a##0;\
 	umulh	pp, a##4, a##0;	adds	 c##5, c##5, pp;\
 	mul	pp, a##5, a##1;	adcs	 c##6, c##6, pp;\
-	umulh	pp, a##5, a##1;	adcq	 c##7,  XZR, pp;\
+	umulh	pp, a##5, a##1;	adc	 c##7,  XZR, pp;\
 \
 	mul	c##3, a##3, a##0;\
 	umulh	pp, a##3, a##0;	adds	 c##4, c##4, pp;\
 	mul	pp, a##4, a##1;	adcs	 c##5, c##5, pp;\
 	umulh	pp, a##4, a##1;	adcs	 c##6, c##6, pp;\
 	mul	pp, a##5, a##2;	adcs	 c##7, c##7, pp;\
-	umulh	pp, a##5, a##2;	adcq	 c##8,  XZR, pp;\
+	umulh	pp, a##5, a##2;	adc	 c##8,  XZR, pp;\
 \
 	mul	c##2, a##2, a##0;\
 	umulh	pp, a##2, a##0;	adds	 c##3, c##3, pp;\
@@ -143,7 +143,7 @@
 	mul	pp, a##4, a##2;	adcs	 c##6, c##6, pp;\
 	umulh	pp, a##4, a##2;	adcs	 c##7, c##7, pp;\
 	mul	pp, a##5, a##3;	adcs	 c##8, c##8, pp;\
-	umulh	pp, a##5, a##3;	adcq	 c##9,  XZR, pp;\
+	umulh	pp, a##5, a##3;	adc	 c##9,  XZR, pp;\
 \
 	mul	c##1, a##1, a##0;\
 	umulh	pp, a##1, a##0;	adds	 c##2, c##2, pp;\
@@ -154,7 +154,7 @@
 	mul	pp, a##4, a##3;	adcs	 c##7, c##7, pp;\
 	umulh	pp, a##4, a##3;	adcs	 c##8, c##8, pp;\
 	mul	pp, a##5, a##4;	adcs	 c##9, c##9, pp;\
-	umulh	pp, a##5, a##4;	adcq	c##10,  XZR, pp;\
+	umulh	pp, a##5, a##4;	adc	c##10,  XZR, pp;\
 \
 	/* Double */\
 \
@@ -168,7 +168,7 @@
 	adcs	 c##8,  c##8,  c##8;\
 	adcs	 c##9,  c##9,  c##9;\
 	adcs	c##10, c##10, c##10;\
-	adcq	c##11, XZR, XZR;\
+	adc	c##11, XZR, XZR;\
 \
 	/* Main diagonal */\
 \
@@ -183,7 +183,7 @@
 	mul	pp, a##4, a##4;	adcs	 c##8,  c##8, pp;\
 	umulh	pp, a##4, a##4;	adcs	 c##9,  c##9, pp;\
 	mul	pp, a##5, a##5;	adcs	c##10, c##10, pp;\
-	umulh	pp, a##5, a##5;	adcq	c##11, c##11, pp;
+	umulh	pp, a##5, a##5;	adc	c##11, c##11, pp;
 
 #ifdef __APPLE__
 #define modsqr768 _modsqr768
@@ -321,7 +321,7 @@ modsqr768:
 	adcs	 cm9,  cm9,  ch9
 	adcs	cm10, cm10, ch10
 	adcs	cm11, cm11, ch11
-	adcq	  sc,   sc,  XZR
+	adc	  sc,   sc,  XZR
 
 	// Compute high tree quarters of a^2
 
@@ -340,7 +340,7 @@ modsqr768:
 	adcs	 ch8,  ch8, XZR
 	adcs	 ch9,  ch9, XZR
 	adcs	ch10, ch10, XZR
-	adcq	ch11, ch11, XZR
+	adc	ch11, ch11, XZR
 
 	// Save ch to stack
 
@@ -399,7 +399,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	 cl9,  cl9, pp
 	mul	pp, m10, r;	adcs	cl10, cl10, pp
 	mul	pp, m11, r;	adcs	cl11, cl11, pp
-				adcq	cl12, XZR, XZR
+				adc	cl12, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl1,  cl1, pp
 	umulh	pp,  m1, r;	adcs	 cl2,  cl2, pp
@@ -412,7 +412,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	 cl9,  cl9, pp
 	umulh	pp,  m9, r;	adcs	cl10, cl10, pp
 	umulh	pp, m10, r;	adcs	cl11, cl11, pp
-	umulh	pp, m11, r;	adcq	cl12, cl12, pp
+	umulh	pp, m11, r;	adc	cl12, cl12, pp
 
 	mul	r, inv, cl1
 
@@ -428,7 +428,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl10, cl10, pp
 	mul	pp, m10, r;	adcs	cl11, cl11, pp
 	mul	pp, m11, r;	adcs	cl12, cl12, pp
-				adcq	cl13, XZR, XZR
+				adc	cl13, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl2,  cl2, pp
 	umulh	pp,  m1, r;	adcs	 cl3,  cl3, pp
@@ -441,7 +441,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl10, cl10, pp
 	umulh	pp,  m9, r;	adcs	cl11, cl11, pp
 	umulh	pp, m10, r;	adcs	cl12, cl12, pp
-	umulh	pp, m11, r;	adcq	cl13, cl13, pp
+	umulh	pp, m11, r;	adc	cl13, cl13, pp
 
 	mul	r, inv, cl2
 
@@ -457,7 +457,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl11, cl11, pp
 	mul	pp, m10, r;	adcs	cl12, cl12, pp
 	mul	pp, m11, r;	adcs	cl13, cl13, pp
-				adcq	cl14, XZR, XZR
+				adc	cl14, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl3,  cl3, pp
 	umulh	pp,  m1, r;	adcs	 cl4,  cl4, pp
@@ -470,7 +470,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl11, cl11, pp
 	umulh	pp,  m9, r;	adcs	cl12, cl12, pp
 	umulh	pp, m10, r;	adcs	cl13, cl13, pp
-	umulh	pp, m11, r;	adcq	cl14, cl14, pp
+	umulh	pp, m11, r;	adc	cl14, cl14, pp
 
 	mul	r, inv, cl3
 
@@ -486,7 +486,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl12, cl12, pp
 	mul	pp, m10, r;	adcs	cl13, cl13, pp
 	mul	pp, m11, r;	adcs	cl14, cl14, pp
-				adcq	cl15, XZR, XZR
+				adc	cl15, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl4,  cl4, pp
 	umulh	pp,  m1, r;	adcs	 cl5,  cl5, pp
@@ -499,7 +499,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl12, cl12, pp
 	umulh	pp,  m9, r;	adcs	cl13, cl13, pp
 	umulh	pp, m10, r;	adcs	cl14, cl14, pp
-	umulh	pp, m11, r;	adcq	cl15, cl15, pp
+	umulh	pp, m11, r;	adc	cl15, cl15, pp
 
 	mul	r, inv, cl4
 
@@ -515,7 +515,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl13, cl13, pp
 	mul	pp, m10, r;	adcs	cl14, cl14, pp
 	mul	pp, m11, r;	adcs	cl15, cl15, pp
-				adcq	cl16, XZR, XZR
+				adc	cl16, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl5,  cl5, pp
 	umulh	pp,  m1, r;	adcs	 cl6,  cl6, pp
@@ -528,7 +528,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl13, cl13, pp
 	umulh	pp,  m9, r;	adcs	cl14, cl14, pp
 	umulh	pp, m10, r;	adcs	cl15, cl15, pp
-	umulh	pp, m11, r;	adcq	cl16, cl16, pp
+	umulh	pp, m11, r;	adc	cl16, cl16, pp
 
 	mul	r, inv, cl5
 
@@ -544,7 +544,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl14, cl14, pp
 	mul	pp, m10, r;	adcs	cl15, cl15, pp
 	mul	pp, m11, r;	adcs	cl16, cl16, pp
-				adcq	cl17, XZR, XZR
+				adc	cl17, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl6,  cl6, pp
 	umulh	pp,  m1, r;	adcs	 cl7,  cl7, pp
@@ -557,7 +557,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl14, cl14, pp
 	umulh	pp,  m9, r;	adcs	cl15, cl15, pp
 	umulh	pp, m10, r;	adcs	cl16, cl16, pp
-	umulh	pp, m11, r;	adcq	cl17, cl17, pp
+	umulh	pp, m11, r;	adc	cl17, cl17, pp
 
 	mul	r, inv, cl6
 
@@ -573,7 +573,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl15, cl15, pp
 	mul	pp, m10, r;	adcs	cl16, cl16, pp
 	mul	pp, m11, r;	adcs	cl17, cl17, pp
-				adcq	cl18, XZR, XZR
+				adc	cl18, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl7,  cl7, pp
 	umulh	pp,  m1, r;	adcs	 cl8,  cl8, pp
@@ -586,7 +586,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl15, cl15, pp
 	umulh	pp,  m9, r;	adcs	cl16, cl16, pp
 	umulh	pp, m10, r;	adcs	cl17, cl17, pp
-	umulh	pp, m11, r;	adcq	cl18, cl18, pp
+	umulh	pp, m11, r;	adc	cl18, cl18, pp
 
 	mul	r, inv, cl7
 
@@ -602,7 +602,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl16, cl16, pp
 	mul	pp, m10, r;	adcs	cl17, cl17, pp
 	mul	pp, m11, r;	adcs	cl18, cl18, pp
-				adcq	cl19, XZR, XZR
+				adc	cl19, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl8,  cl8, pp
 	umulh	pp,  m1, r;	adcs	 cl9,  cl9, pp
@@ -615,7 +615,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl16, cl16, pp
 	umulh	pp,  m9, r;	adcs	cl17, cl17, pp
 	umulh	pp, m10, r;	adcs	cl18, cl18, pp
-	umulh	pp, m11, r;	adcq	cl19, cl19, pp
+	umulh	pp, m11, r;	adc	cl19, cl19, pp
 
 	mul	r, inv, cl8
 
@@ -631,7 +631,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl17, cl17, pp
 	mul	pp, m10, r;	adcs	cl18, cl18, pp
 	mul	pp, m11, r;	adcs	cl19, cl19, pp
-				adcq	cl20, XZR, XZR
+				adc	cl20, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	 cl9,  cl9, pp
 	umulh	pp,  m1, r;	adcs	cl10, cl10, pp
@@ -644,7 +644,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl17, cl17, pp
 	umulh	pp,  m9, r;	adcs	cl18, cl18, pp
 	umulh	pp, m10, r;	adcs	cl19, cl19, pp
-	umulh	pp, m11, r;	adcq	cl20, cl20, pp
+	umulh	pp, m11, r;	adc	cl20, cl20, pp
 
 	mul	r, inv, cl9
 
@@ -660,7 +660,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl18, cl18, pp
 	mul	pp, m10, r;	adcs	cl19, cl19, pp
 	mul	pp, m11, r;	adcs	cl20, cl20, pp
-				adcq	cl21, XZR, XZR
+				adc	cl21, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	cl10, cl10, pp
 	umulh	pp,  m1, r;	adcs	cl11, cl11, pp
@@ -673,7 +673,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl18, cl18, pp
 	umulh	pp,  m9, r;	adcs	cl19, cl19, pp
 	umulh	pp, m10, r;	adcs	cl20, cl20, pp
-	umulh	pp, m11, r;	adcq	cl21, cl21, pp
+	umulh	pp, m11, r;	adc	cl21, cl21, pp
 
 	mul	r, inv, cl10
 
@@ -689,7 +689,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl19, cl19, pp
 	mul	pp, m10, r;	adcs	cl20, cl20, pp
 	mul	pp, m11, r;	adcs	cl21, cl21, pp
-				adcq	cl22, XZR, XZR
+				adc	cl22, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	cl11, cl11, pp
 	umulh	pp,  m1, r;	adcs	cl12, cl12, pp
@@ -702,7 +702,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl19, cl19, pp
 	umulh	pp,  m9, r;	adcs	cl20, cl20, pp
 	umulh	pp, m10, r;	adcs	cl21, cl21, pp
-	umulh	pp, m11, r;	adcq	cl22, cl22, pp
+	umulh	pp, m11, r;	adc	cl22, cl22, pp
 
 	mul	r, inv, cl11
 
@@ -718,7 +718,7 @@ modsqr768:
 	mul	pp,  m9, r;	adcs	cl20, cl20, pp
 	mul	pp, m10, r;	adcs	cl21, cl21, pp
 	mul	pp, m11, r;	adcs	cl22, cl22, pp
-				adcq	cl23, XZR, XZR
+				adc	cl23, XZR, XZR
 
 	umulh	pp,  m0, r;	adds	cl12, cl12, pp
 	umulh	pp,  m1, r;	adcs	cl13, cl13, pp
@@ -731,7 +731,7 @@ modsqr768:
 	umulh	pp,  m8, r;	adcs	cl20, cl20, pp
 	umulh	pp,  m9, r;	adcs	cl21, cl21, pp
 	umulh	pp, m10, r;	adcs	cl22, cl22, pp
-	umulh	pp, m11, r;	adcq	cl23, cl23, pp
+	umulh	pp, m11, r;	adc	cl23, cl23, pp
 
 	// Add top half of product
 
@@ -742,7 +742,7 @@ modsqr768:
 	ldp	a, m, [SP, #32*8];	adcs	cl20, cl20, a;	adcs	cl21, cl21, m
 	ldp	a, m, [SP, #34*8];	adcs	cl22, cl22, a;	adcs	cl23, cl23, m
 
-	adcq	cl24, XZR, XZR
+	adc	cl24, XZR, XZR
 
 	// Conditionally subtract m:
 	//
