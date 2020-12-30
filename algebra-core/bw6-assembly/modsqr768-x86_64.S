@@ -69,8 +69,8 @@ modsqr768:
 	// Preserve m, c, and callee-save registers
 
 #ifdef _WIN64
-	mov	%rdi,	$1*8(%rsp)
-	mov	%rsi,	$2*8(%rsp)
+	mov	%rdi,	1*8(%rsp)
+	mov	%rsi,	2*8(%rsp)
 #endif
 	push	%r15
 	push	%r14
@@ -735,8 +735,8 @@ modsqr768:
 	// Restore callee-saves
 
 #ifdef _WIN64
-	mov	$7*8(%rsp), %rdi
-	mov	$8*8(%rsp), %rsi
+	mov	7*8(%rsp), %rdi
+	mov	8*8(%rsp), %rsi
 #endif
 	pop	%rbx
 	pop	%rbp
