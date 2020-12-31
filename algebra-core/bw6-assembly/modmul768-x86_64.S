@@ -22,8 +22,8 @@
 #	define y4	%rax
 #endif
 
-#define y3	z
-#define y2	x
+#define y3	x
+#define y2	z
 #define y1	%rbx
 #define y0	%rbp
 #define y6	y0
@@ -119,46 +119,31 @@ modmul768:
 mov	%rsi, 1*8(%rsp)
 	mov	%rdi, 2*8(%rsp)
 #endif
-push	%r15
-        push	%r14
-        push	%r13
-        push	%r12
-        push	%rbx
-        push	%rbp
+mov	%rsp, pl
 
 // Allocate stack
 
-sub	$40*8, %rsp
+sub	$46*8, %rsp
 
-// Save y,m,z on the stack
+// Save y,m,z, callee-saves	// copy x to the stack
 
-mov	y, 13*8(%rsp)
-mov	m, 14*8(%rsp)
-mov	z, 15*8(%rsp)
-
-// copy x to the stack
-
-mov	0xb*8(x), %rax;	mov	%rax, xb
-mov	0xa*8(x), %rax;	mov	%rax, xa
-mov	0x9*8(x), %rax;	mov	%rax, x9
-mov	0x8*8(x), %rax;	mov	%rax, x8
-mov	0x7*8(x), %rax;	mov	%rax, x7
-mov	0x6*8(x), %rax;	mov	%rax, x6
-mov	0x5*8(x), %rax;	mov	%rax, x5
-mov	0x4*8(x), %rax;	mov	%rax, x4
-mov	0x3*8(x), %rax;	mov	%rax, x3
-mov	0x2*8(x), %rax;	mov	%rax, x2
-mov	0x1*8(x), %rax;	mov	%rax, x1
-mov	0x0*8(x), %rax;	mov	%rax, x0
+mov	%r15, -1*8(pl); 	mov	0xb*8(x), %rax;	mov	%rax, xb
+mov	%r14, -2*8(pl); 	mov	0xa*8(x), %rax;	mov	%rax, xa
+mov	%r13, -3*8(pl); 	mov	0x9*8(x), %rax;	mov	%rax, x9
+mov	%r12, -4*8(pl); 	mov	0x8*8(x), %rax;	mov	%rax, x8
+mov	%rbx, -5*8(pl); 	mov	0x7*8(x), %rax;	mov	%rax, x7
+mov	%rbp, -6*8(pl); 	mov	0x6*8(x), %rax;	mov	%rax, x6
+mov	y,    13*8(%rsp);	mov	0x5*8(x), %rax;	mov	%rax, x5
+mov	m,    14*8(%rsp);	mov	0x4*8(x), %rax;	mov	%rax, x4
+mov	z,    15*8(%rsp);	mov	0x3*8(x), %rax;	mov	%rax, x3
+// copy yl to registers
+mov	0x0*8(y), y0;		mov	0x2*8(x), %rax;	mov	%rax, x2
+mov	0x1*8(y), y1;		mov	0x1*8(x), %rax;	mov	%rax, x1
+mov	0x2*8(y), y2;		mov	0x0*8(x), %rax;	mov	%rax, x0
 
 // xl * yl
 
-// copy yl to registers
-
-mov	0x0*8(y), y0
-        mov	0x1*8(y), y1
-        mov	0x2*8(y), y2	// overwrites x (no longer needed)
-mov	0x3*8(y), y3	// overwrites z (restore later)
+mov	0x3*8(y), y3	// overwrites x (no longer needed)
 mov	0x4*8(y), y4
         mov	0x5*8(y), y5	// may overwrite y (restore later)
 
@@ -214,7 +199,7 @@ mulx	y3, pl, ph;	adox	pl, t7;	adox	ph, t8
 mulx	y3, pl, ph;	adox	pl, t8;	adox	ph, t9
         mulx	y2, pl, ph;	adcx	pl, t7;	adcx	ph, t8
         mulx	y5, pl, tb;	adox	pl, ta;	adox	_0, tb
-        mulx	y4, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	_0, tb
+        mulx	y4, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	$0, tb
 
 // restore y in pl
 
@@ -222,22 +207,22 @@ mov	13*8(%rsp), pl
 
 // xh * yh
 
+mov	x6, %rdx
+
 // store t, copy yh to registers
 
 mov	t6, zl6;	mov	0x6*8(pl), y6
-        mov	t7, zl7;	mov	0x7*8(pl), y7
-        mov	t8, zl8;	mov	0x8*8(pl), y8
-        mov	t9, zl9;	mov	0x9*8(pl), y9
-        mov	ta, zla;	mov	0xa*8(pl), ya
+        mov	t7, zl7;	mov	0x8*8(pl), y8
+        mov	t8, zl8;	mov	0x7*8(pl), y7
+        mov	t9, zl9;	mov	0xa*8(pl), ya
+        mov	ta, zla;	mov	0x9*8(pl), y9
         mov	tb, zlb;	mov	0xb*8(pl), yb
-
-        mov	x6, %rdx
 
         mulx	y6, t0, t1;	mov	t0, zh0
 mulx	y8, t2, t3;	xor	t0, t0
         mulx	y7, pl, ph;	adcx	pl, t1;	adcx	ph, t2
-        mulx	ya, t4, t5;	mov	t0, _0
-mulx	y9, pl, ph;	adcx	pl, t3;	adcx	ph, t4
+        mulx	ya, t4, t5
+        mulx	y9, pl, ph;	adcx	pl, t3;	adcx	ph, t4
         mulx	yb, pl, ph;	adcx	pl, t5;	adcx	ph, t6	// t6 = t0
 
 mov	x7, %rdx
@@ -283,7 +268,7 @@ mulx	y9, pl, ph;	adox	pl, t7;	adox	ph, t8
 mulx	y9, pl, ph;	adox	pl, t8;	adox	ph, t9
         mulx	y8, pl, ph;	adcx	pl, t7;	adcx	ph, t8
         mulx	yb, pl, tb;	adox	pl, ta;	adox	_0, tb
-        mulx	ya, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	_0, tb
+        mulx	ya, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	$0, tb
 
 // restore y in pl
 
@@ -338,8 +323,8 @@ xor	pl, ph;		mov	ph, x0
 mulx	y0, t0, t1;	mov	t0, x6
 mulx	y2, t2, t3;	xor	t0, t0
         mulx	y1, pl, ph;	adcx	pl, t1;	adcx	ph, t2
-        mulx	y4, t4, t5;	mov	t0, _0
-mulx	y3, pl, ph;	adcx	pl, t3;	adcx	ph, t4
+        mulx	y4, t4, t5
+        mulx	y3, pl, ph;	adcx	pl, t3;	adcx	ph, t4
         mulx	y5, pl, ph;	adcx	pl, t5;	adcx	ph, t6	// t6 = t0
 
 mov	x1, %rdx
@@ -385,18 +370,18 @@ mulx	y3, pl, ph;	adox	pl, t7;	adox	ph, t8
 mulx	y3, pl, ph;	adox	pl, t8;	adox	ph, t9
         mulx	y2, pl, ph;	adcx	pl, t7;	adcx	ph, t8
         mulx	y5, pl, tb;	adox	pl, ta;	adox	_0, tb
-        mulx	y4, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	_0, tb
+        mulx	y4, pl, ph;	adcx	pl, t9;	adcx	ph, ta;	adc	$0, tb
 
         mov	x0, pl
 
 // reload low half into y0-y5
 
-mov	x6, y0
-        mov	x7, y1
-        mov	x8, y2
-        mov	x9, y3
-        mov	xa, y4
-        mov	xb, y5
+mov	x6, y0;	xor	pl, t6
+        mov	x7, y1;	xor	pl, t7
+        mov	x8, y2;	xor	pl, t8
+        mov	x9, y3;	xor	pl, t9
+        mov	xa, y4;	xor	pl, ta
+        mov	xb, y5;	xor	pl, tb
 
 // compute (yh-yl)(xl-xh)
 
@@ -406,12 +391,6 @@ xor	pl, y2
 xor	pl, y3
 xor	pl, y4
 xor	pl, y5
-xor	pl, t6
-xor	pl, t7
-xor	pl, t8
-xor	pl, t9
-xor	pl, ta
-xor	pl, tb
 
         sub	pl, y0
         sbb	pl, y1
@@ -556,7 +535,9 @@ adcq	$0, zhb
 #define z22	zha
 #define z23	zhb
 
-// Load low half of zl
+mov	14*8(%rsp), pl
+
+// Load low half of zl (high half is in t6-t11)
 
 mov	zl0, t0
         mov	zl1, t1
@@ -567,8 +548,7 @@ mov	zl0, t0
 
 // Copy m to stack
 
-mov	14*8(%rsp), pl
-        mov	0x0*8(pl), %rdx;	mov %rdx, m0
+mov	0x0*8(pl), %rdx;	mov %rdx, m0
 mov	0x1*8(pl), %rdx;	mov %rdx, m1
 mov	0x2*8(pl), %rdx;	mov %rdx, m2
 mov	0x3*8(pl), %rdx;	mov %rdx, m3
