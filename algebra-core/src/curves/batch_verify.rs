@@ -1,6 +1,8 @@
 use crate::{
     cfg_chunks_mut,
-    curves::{batch_bucketed_add, BatchGroupArithmeticSlice, BucketPosition, BATCH_SIZE},
+    curves::{
+        batch_bucketed_add, BatchGroupArithmeticSlice, BucketPosition, BATCH_AFFINE_BATCH_SIZE,
+    },
     fields::FpParameters,
     AffineCurve, PrimeField, ProjectiveCurve, Vec,
 };
@@ -19,6 +21,36 @@ impl fmt::Display for VerificationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Verification Error. Not in subgroup")
     }
+}
+
+/// Checks if points belong to the cyclic subgroup of prime order
+/// defined by ScalarField::modulus()
+
+/// More detailed description in ../spec/algorithmic-optimisations.pdf
+
+pub fn batch_verify_in_subgroup<C: AffineCurve, R: Rng>(
+    points: &[C],
+    security_param: usize,
+    rng: &mut R,
+) -> Result<(), VerificationError> {
+    #[cfg(feature = "std")]
+    let cost_estimate = (<C::ScalarField as PrimeField>::Params::MODULUS_BITS as f64
+        * (0.5 * 7.0 / 6.0 * 0.8 + 1.0 / 5.0))
+        .ceil() as usize;
+    #[cfg(not(feature = "std"))]
+    let cost_estimate = <C::ScalarField as PrimeField>::Params::MODULUS_BITS as usize * 5 / 4;
+
+    let (num_buckets, num_rounds, _) = get_max_bucket(
+        security_param,
+        points.len(),
+        // We estimate the costs of a single scalar multiplication in the batch affine, w-NAF GLV
+        // case as 7/6 * 0.5 * n_bits * 0.8 (doubling) + 0.5 * 1/(w + 1) * n_bits
+        // (addition) We take into account that doubling in the batch add model is cheaper
+        // as it requires less cache use
+        cost_estimate,
+    );
+    run_rounds(points, num_buckets, num_rounds, None, rng)?;
+    Ok(())
 }
 
 fn verify_points<C: AffineCurve, R: Rng>(
@@ -43,8 +75,8 @@ fn verify_points<C: AffineCurve, R: Rng>(
     // there are sufficient number of buckets. For SW curves, the number
     // elems for the batch mul to become useful is around 2^24.
     let _now = timer!();
-    let verification_failure = if num_buckets >= BATCH_SIZE {
-        cfg_chunks_mut!(buckets, BATCH_SIZE).for_each(|e| {
+    let verification_failure = if num_buckets >= BATCH_AFFINE_BATCH_SIZE {
+        cfg_chunks_mut!(buckets, BATCH_AFFINE_BATCH_SIZE).for_each(|e| {
             let length = e.len();
             e[..].batch_scalar_mul_in_place::<<C::ScalarField as PrimeField>::BigInt>(
                 &mut vec![C::ScalarField::modulus().into(); length][..],
@@ -108,31 +140,6 @@ fn run_rounds<C: AffineCurve, R: Rng>(
         verify_points(points, num_buckets, new_security_param, rng)?;
     }
 
-    Ok(())
-}
-
-pub fn batch_verify_in_subgroup<C: AffineCurve, R: Rng>(
-    points: &[C],
-    security_param: usize,
-    rng: &mut R,
-) -> Result<(), VerificationError> {
-    #[cfg(feature = "std")]
-    let cost_estimate = (<C::ScalarField as PrimeField>::Params::MODULUS_BITS as f64
-        * (0.5 * 7.0 / 6.0 * 0.8 + 1.0 / 5.0))
-        .ceil() as usize;
-    #[cfg(not(feature = "std"))]
-    let cost_estimate = <C::ScalarField as PrimeField>::Params::MODULUS_BITS as usize * 5 / 4;
-
-    let (num_buckets, num_rounds, _) = get_max_bucket(
-        security_param,
-        points.len(),
-        // We estimate the costs of a single scalar multiplication in the batch affine, w-NAF GLV
-        // case as 7/6 * 0.5 * n_bits * 0.8 (doubling) + 0.5 * 1/(w + 1) * n_bits
-        // (addition) We take into account that doubling in the batch add model is cheaper
-        // as it requires less cache use
-        cost_estimate,
-    );
-    run_rounds(points, num_buckets, num_rounds, None, rng)?;
     Ok(())
 }
 
